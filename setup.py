@@ -1,10 +1,13 @@
 from setuptools import setup, find_packages
 
+with open("README.md", encoding="utf-8") as f:
+    long_description = f.read()
+
 setup(
     name="agora-debate",
     version="0.2.0",
-    description="Multi-agent AI debates in your terminal — powered by Claude",
-    long_description=open("README.md").read(),
+    description="Multi-agent AI debates in your terminal - powered by Claude",
+    long_description=long_description,
     long_description_content_type="text/markdown",
     author="Bernhard Brugger",
     author_email="bernhardb0100@gmail.com",
