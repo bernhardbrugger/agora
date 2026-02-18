@@ -3,23 +3,23 @@
 from __future__ import annotations
 
 from rich.console import Console
+from rich.live import Live
 from rich.panel import Panel
-from rich.progress import BarColumn, Progress, TextColumn
-from rich.text import Text
 from rich.markdown import Markdown
 from rich.rule import Rule
 
 console = Console()
 
 
-def print_header(topic: str, agent_names: list[str], rounds: int) -> None:
+def print_header(topic: str, agent_names: list[str], rounds: int, model: str = "sonnet") -> None:
     """Print the debate header."""
     console.print()
-    console.print(Rule("[bold]AGORA[/bold] — Multi-Agent Debate", style="bright_blue"))
+    console.print(Rule("[bold]🏛️ AGORA[/bold] — Multi-Agent Debate", style="bright_blue"))
     console.print()
     console.print(f"  [bold]Topic:[/bold]  {topic}")
     console.print(f"  [bold]Agents:[/bold] {', '.join(agent_names)}")
     console.print(f"  [bold]Rounds:[/bold] {rounds}")
+    console.print(f"  [bold]Model:[/bold]  {model}")
     console.print()
     console.print(Rule(style="bright_blue"))
     console.print()
@@ -40,6 +40,28 @@ def print_agent_response(agent_name: str, text: str, color: str = "white") -> No
         border_style=color,
         padding=(1, 2),
     ))
+
+
+def print_agent_response_stream(agent, topic: str, round_num: int, total_rounds: int, history: list[dict]) -> str:
+    """Stream an agent's response with live updating panel. Returns full text."""
+    collected = []
+
+    with Live(
+        Panel("[dim]thinking...[/dim]", title=f"[bold]{agent.name}[/bold]", border_style=agent.color, padding=(1, 2)),
+        console=console,
+        refresh_per_second=8,
+    ) as live:
+        for chunk in agent.respond_stream(topic, round_num, total_rounds, history):
+            collected.append(chunk)
+            text_so_far = "".join(collected)
+            live.update(Panel(
+                Markdown(text_so_far),
+                title=f"[bold]{agent.name}[/bold]",
+                border_style=agent.color,
+                padding=(1, 2),
+            ))
+
+    return "".join(collected)
 
 
 def print_thinking(agent_name: str) -> None:
