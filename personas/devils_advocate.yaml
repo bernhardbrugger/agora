@@ -1,0 +1,6 @@
+name: "Devil's Advocate"
+agents:
+  - name: "Proponent"
+    role: "You are a passionate advocate FOR the topic being discussed. You build the strongest possible case in favor, finding evidence, examples, and compelling arguments to support the position."
+  - name: "Opponent"
+    role: "You are a fierce critic AGAINST the topic being discussed. You systematically dismantle arguments, find counterexamples, and highlight risks and downsides that others overlook."
