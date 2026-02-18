@@ -2,21 +2,18 @@ from setuptools import setup, find_packages
 
 setup(
     name="agora-debate",
-    version="0.1.0",
-    description="CLI framework for multi-agent debates powered by Claude",
+    version="0.2.0",
+    description="Multi-agent AI debates in your terminal — powered by Claude",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     author="Bernhard Brugger",
+    author_email="bernhardb0100@gmail.com",
+    url="https://github.com/bernhardbrugger/agora",
     packages=find_packages(),
     include_package_data=True,
-    package_data={"": ["personas/*.yaml"]},
-    data_files=[("personas", [
-        "personas/neutral.yaml",
-        "personas/investor_panel.yaml",
-        "personas/startup_team.yaml",
-        "personas/philosophy.yaml",
-        "personas/devils_advocate.yaml",
-    ])],
+    package_data={
+        "": ["personas/*.yaml"],
+    },
     install_requires=[
         "anthropic>=0.40.0",
         "click>=8.0",
@@ -30,4 +27,14 @@ setup(
         ],
     },
     python_requires=">=3.10",
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    ],
 )
