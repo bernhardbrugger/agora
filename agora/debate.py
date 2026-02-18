@@ -3,11 +3,8 @@
 from __future__ import annotations
 
 import re
-from collections import Counter
 from datetime import datetime
 from pathlib import Path
-
-import anthropic
 
 from agora.agent import Agent
 from agora.moderator import Moderator
@@ -17,7 +14,6 @@ from agora import renderer
 def calculate_consensus(history: list[dict], round_num: int) -> float:
     """Calculate consensus score for a given round using keyword overlap.
 
-    Falls back to keyword overlap (no embeddings needed).
     Returns a float between 0 and 1.
     """
     round_texts = [e["text"] for e in history if e["round"] == round_num]
@@ -26,7 +22,6 @@ def calculate_consensus(history: list[dict], round_num: int) -> float:
 
     def extract_keywords(text: str) -> set[str]:
         words = re.findall(r"\b[a-zA-ZäöüÄÖÜß]{4,}\b", text.lower())
-        # Filter common stop words
         stop = {
             "this", "that", "with", "from", "have", "been", "will", "would",
             "could", "should", "also", "about", "into", "than", "them", "then",
@@ -42,7 +37,6 @@ def calculate_consensus(history: list[dict], round_num: int) -> float:
     if not any(keyword_sets):
         return 0.5
 
-    # Pairwise Jaccard similarity
     similarities = []
     for i in range(len(keyword_sets)):
         for j in range(i + 1, len(keyword_sets)):
@@ -61,7 +55,9 @@ def run_debate(
     topic: str,
     agent_configs: list[dict],
     rounds: int = 3,
+    model: str = "sonnet",
     output_dir: str = "reports",
+    stream: bool = True,
 ) -> str:
     """Run a full debate and return the path to the saved report."""
     agents = [
@@ -69,12 +65,13 @@ def run_debate(
             name=cfg["name"],
             role=cfg["role"],
             color=cfg.get("color", "white"),
+            model=model,
         )
         for cfg in agent_configs
     ]
     agent_names = [a.name for a in agents]
 
-    renderer.print_header(topic, agent_names, rounds)
+    renderer.print_header(topic, agent_names, rounds, model)
 
     history: list[dict] = []
 
@@ -82,27 +79,31 @@ def run_debate(
         renderer.print_round_header(round_num, rounds)
 
         for agent in agents:
-            renderer.print_thinking(agent.name)
-            text = agent.respond(topic, round_num, rounds, history)
+            if stream:
+                text = renderer.print_agent_response_stream(
+                    agent, topic, round_num, rounds, history
+                )
+            else:
+                renderer.print_thinking(agent.name)
+                text = agent.respond(topic, round_num, rounds, history)
+                renderer.print_agent_response(agent.name, text, agent.color)
+
             history.append({
                 "round": round_num,
                 "agent": agent.name,
                 "text": text,
             })
-            renderer.print_agent_response(agent.name, text, agent.color)
 
-        # Consensus meter
         score = calculate_consensus(history, round_num)
         renderer.print_consensus_meter(score, round_num)
 
     # Moderator synthesis
     renderer.print_thinking("Moderator")
-    moderator = Moderator()
+    moderator = Moderator(model=model)
     synthesis = moderator.synthesize(topic, history, agent_names)
     renderer.print_moderator_synthesis(synthesis)
 
-    # Save report
-    report_path = _save_report(topic, agent_configs, rounds, history, synthesis, output_dir)
+    report_path = _save_report(topic, agent_configs, rounds, model, history, synthesis, output_dir)
     renderer.print_saved(report_path)
 
     return report_path
@@ -112,6 +113,7 @@ def _save_report(
     topic: str,
     agent_configs: list[dict],
     rounds: int,
+    model: str,
     history: list[dict],
     synthesis: str,
     output_dir: str,
@@ -127,11 +129,12 @@ def _save_report(
 
     lines = [
         f"# Debate: {topic}",
-        f"",
+        "",
         f"**Date:** {datetime.now().strftime('%Y-%m-%d %H:%M')}",
         f"**Rounds:** {rounds}",
+        f"**Model:** {model}",
         f"**Agents:** {', '.join(a['name'] for a in agent_configs)}",
-        f"",
+        "",
         "---",
         "",
     ]
