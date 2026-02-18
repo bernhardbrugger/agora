@@ -46,20 +46,38 @@ def print_agent_response_stream(agent, topic: str, round_num: int, total_rounds:
     """Stream an agent's response with live updating panel. Returns full text."""
     collected = []
 
-    with Live(
-        Panel("[dim]thinking...[/dim]", title=f"[bold]{agent.name}[/bold]", border_style=agent.color, padding=(1, 2)),
-        console=console,
-        refresh_per_second=8,
-    ) as live:
-        for chunk in agent.respond_stream(topic, round_num, total_rounds, history):
-            collected.append(chunk)
-            text_so_far = "".join(collected)
-            live.update(Panel(
-                Markdown(text_so_far),
-                title=f"[bold]{agent.name}[/bold]",
-                border_style=agent.color,
-                padding=(1, 2),
-            ))
+    try:
+        with Live(
+            Panel("[dim]thinking...[/dim]", title=f"[bold]{agent.name}[/bold]", border_style=agent.color, padding=(1, 2)),
+            console=console,
+            refresh_per_second=8,
+        ) as live:
+            for chunk in agent.respond_stream(topic, round_num, total_rounds, history):
+                collected.append(chunk)
+                text_so_far = "".join(collected)
+                live.update(Panel(
+                    Markdown(text_so_far),
+                    title=f"[bold]{agent.name}[/bold]",
+                    border_style=agent.color,
+                    padding=(1, 2),
+                ))
+    except KeyboardInterrupt:
+        console.print("\n  [dim]Debate interrupted.[/dim]")
+        raise SystemExit(0)
+    except Exception as e:
+        error_type = type(e).__name__
+        error_str = str(e)
+        if "AuthenticationError" in error_type or "401" in error_str:
+            console.print(f"  [bold red]Error:[/bold red] Invalid API key. Check your ANTHROPIC_API_KEY.")
+            raise SystemExit(1)
+        elif "NotFoundError" in error_type or "could not resolve" in error_str.lower():
+            console.print(f"  [bold yellow]Warning:[/bold yellow] Model not available for streaming, falling back...")
+            text = agent.respond(topic, round_num, total_rounds, history)
+            print_agent_response(agent.name, text, agent.color)
+            return text
+        else:
+            console.print(f"  [bold red]API Error:[/bold red] {error_type}: {error_str}")
+            raise SystemExit(1)
 
     return "".join(collected)
 
