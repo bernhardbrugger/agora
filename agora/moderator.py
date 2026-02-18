@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
+import time
 import anthropic
+
+from agora.agent import resolve_model
 
 
 class Moderator:
     """Neutral moderator that analyzes the full debate and provides a synthesis."""
 
-    def __init__(self, model: str = "claude-opus-4-5-20250514"):
-        self.model = model
+    def __init__(self, model: str = "sonnet"):
+        self.model = resolve_model(model)
         self.client = anthropic.Anthropic()
 
     def synthesize(self, topic: str, history: list[dict], agent_names: list[str]) -> str:
@@ -40,13 +43,25 @@ class Moderator:
             f"followed by a brief justification)"
         )
 
-        response = self.client.messages.create(
-            model=self.model,
-            max_tokens=2048,
-            system=system_prompt,
-            messages=[{"role": "user", "content": user_prompt}],
-        )
-        return response.content[0].text
+        for attempt in range(3):
+            try:
+                response = self.client.messages.create(
+                    model=self.model,
+                    max_tokens=2048,
+                    system=system_prompt,
+                    messages=[{"role": "user", "content": user_prompt}],
+                )
+                return response.content[0].text
+            except anthropic.RateLimitError:
+                if attempt < 2:
+                    time.sleep(2 ** attempt)
+                else:
+                    raise
+            except anthropic.APIError:
+                if attempt < 2:
+                    time.sleep(1)
+                else:
+                    raise
 
     @staticmethod
     def _format_transcript(history: list[dict]) -> str:
