@@ -27,8 +27,10 @@ def cli():
 @click.option("--agents", default="3", help="Comma-separated agent names or a number for neutral agents.")
 @click.option("--rounds", default=3, type=int, help="Number of debate rounds.")
 @click.option("--preset", default=None, help="Use a built-in persona preset (e.g. investor_panel).")
+@click.option("--model", default="sonnet", help="Model to use: haiku ($0.01), sonnet ($0.10), opus ($1.00).")
 @click.option("--output", default="reports", help="Directory to save the report.")
-def run(topic: str, agents: str, rounds: int, preset: str | None, output: str):
+@click.option("--no-stream", is_flag=True, help="Disable streaming output.")
+def run(topic: str, agents: str, rounds: int, preset: str | None, model: str, output: str, no_stream: bool):
     """Run a multi-agent debate on a topic."""
     # Check API key
     if not os.environ.get("ANTHROPIC_API_KEY"):
@@ -66,7 +68,7 @@ def run(topic: str, agents: str, rounds: int, preset: str | None, output: str):
                     sys.exit(0)
             agent_configs = parsed
 
-    run_debate(topic, agent_configs, rounds=rounds, output_dir=output)
+    run_debate(topic, agent_configs, rounds=rounds, model=model, output_dir=output, stream=not no_stream)
 
 
 @cli.command(name="presets")
@@ -79,8 +81,8 @@ def list_presets_cmd():
     console.print("[bold]Available presets:[/bold]")
     for name in presets:
         data = load_preset(name)
-        agents = ", ".join(a["name"] for a in data.get("agents", []))
-        console.print(f"  [cyan]{name}[/cyan] — {data.get('name', name)} ({agents})")
+        agents_str = ", ".join(a["name"] for a in data.get("agents", []))
+        console.print(f"  [cyan]{name}[/cyan] — {data.get('name', name)} ({agents_str})")
 
 
 def main():
