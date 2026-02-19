@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import Optional
 
 import yaml
 
@@ -40,7 +41,7 @@ def load_preset(name: str) -> dict:
         raise FileNotFoundError(
             f"Preset '{name}' not found. Available: {', '.join(list_presets())}"
         )
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         data = yaml.safe_load(f)
 
     # Assign colors to agents
@@ -72,7 +73,7 @@ def make_neutral_agents(count: int) -> list[dict]:
     return agents
 
 
-def parse_agent_spec(spec: str) -> list[dict] | None:
+def parse_agent_spec(spec: str) -> Optional[list[dict]]:
     """Parse the --agents argument.
 
     If spec is a number, returns None (caller should use make_neutral_agents).
