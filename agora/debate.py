@@ -5,33 +5,30 @@ from __future__ import annotations
 import re
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 from agora.agent import Agent
 from agora.moderator import Moderator
+from agora.providers.base import LLMProvider
 from agora import renderer
 
 
 def calculate_consensus(history: list[dict], round_num: int) -> float:
-    """Calculate consensus score for a given round using keyword overlap.
-
-    Returns a float between 0 and 1.
-    """
+    """Calculate consensus score using keyword overlap. Returns 0-1."""
     round_texts = [e["text"] for e in history if e["round"] == round_num]
     if len(round_texts) < 2:
         return 1.0
 
-    def extract_keywords(text: str) -> set[str]:
-        words = re.findall(r"\b[a-zA-ZäöüÄÖÜß]{4,}\b", text.lower())
+    def extract_keywords(text: str) -> set:
+        words = re.findall(r"\b[a-zA-Z]{4,}\b", text.lower())
         stop = {
             "this", "that", "with", "from", "have", "been", "will", "would",
             "could", "should", "also", "about", "into", "than", "them", "then",
             "their", "there", "these", "those", "what", "when", "where", "which",
             "while", "more", "some", "such", "each", "make", "like", "just",
             "over", "very", "much", "many", "most", "other", "being", "does",
-            "oder", "aber", "auch", "noch", "schon", "kann", "eine", "einen",
-            "einem", "nicht", "sich", "sind", "wird", "dass", "dies", "diese",
         }
-        return {w for w in words if w not in stop}
+        return set(w for w in words if w not in stop)
 
     keyword_sets = [extract_keywords(t) for t in round_texts]
     if not any(keyword_sets):
@@ -55,25 +52,30 @@ def run_debate(
     topic: str,
     agent_configs: list[dict],
     rounds: int = 3,
-    model: str = "sonnet",
+    model: Optional[str] = None,
+    provider_name: str = "anthropic",
     output_dir: str = "reports",
     stream: bool = True,
 ) -> str:
     """Run a full debate and return the path to the saved report."""
+    # Resolve provider
+    llm = LLMProvider.resolve(provider_name, model=model)
+    provider_label = f"{provider_name}/{llm.display_name}"
+
     agents = [
         Agent(
             name=cfg["name"],
             role=cfg["role"],
             color=cfg.get("color", "white"),
-            model=model,
+            provider=llm,
         )
         for cfg in agent_configs
     ]
     agent_names = [a.name for a in agents]
 
-    renderer.print_header(topic, agent_names, rounds, model)
+    renderer.print_header(topic, agent_names, rounds, provider_label)
 
-    history: list[dict] = []
+    history = []
 
     for round_num in range(1, rounds + 1):
         renderer.print_round_header(round_num, rounds)
@@ -99,11 +101,11 @@ def run_debate(
 
     # Moderator synthesis
     renderer.print_thinking("Moderator")
-    moderator = Moderator(model=model)
+    moderator = Moderator(provider=llm)
     synthesis = moderator.synthesize(topic, history, agent_names)
     renderer.print_moderator_synthesis(synthesis)
 
-    report_path = _save_report(topic, agent_configs, rounds, model, history, synthesis, output_dir)
+    report_path = _save_report(topic, agent_configs, rounds, provider_label, history, synthesis, output_dir)
     renderer.print_saved(report_path)
 
     return report_path
@@ -113,7 +115,7 @@ def _save_report(
     topic: str,
     agent_configs: list[dict],
     rounds: int,
-    model: str,
+    provider_label: str,
     history: list[dict],
     synthesis: str,
     output_dir: str,
@@ -132,7 +134,7 @@ def _save_report(
         "",
         f"**Date:** {datetime.now().strftime('%Y-%m-%d %H:%M')}",
         f"**Rounds:** {rounds}",
-        f"**Model:** {model}",
+        f"**Provider:** {provider_label}",
         f"**Agents:** {', '.join(a['name'] for a in agent_configs)}",
         "",
         "---",
@@ -152,5 +154,5 @@ def _save_report(
     lines.append(synthesis)
     lines.append("")
 
-    path.write_text("\n".join(lines))
+    path.write_text("\n".join(lines), encoding="utf-8")
     return str(path)
