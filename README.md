@@ -27,6 +27,44 @@
 
 ---
 
+## 🤖 Supported Providers
+
+Use any major LLM provider — just set your API key and go:
+
+| Provider | Flag | Models | API Key |
+|----------|------|--------|---------|
+| **Anthropic** (default) | `--provider anthropic` | `haiku`, `sonnet`*, `opus` | `ANTHROPIC_API_KEY` |
+| **OpenAI** | `--provider openai` | `gpt4o`*, `gpt4o-mini`, `o1`, `o3-mini` | `OPENAI_API_KEY` |
+| **Google Gemini** | `--provider gemini` | `flash`*, `pro`, `thinking` | `GOOGLE_API_KEY` |
+| **xAI Grok** | `--provider grok` | `grok`*, `grok-mini` | `XAI_API_KEY` |
+
+*\* = default model for that provider*
+
+```bash
+# Use Claude (default)
+agora run --topic "Your topic" --preset neutral
+
+# Use GPT-4o
+agora run --topic "Your topic" --preset neutral --provider openai
+
+# Use Gemini Flash (cheapest)
+agora run --topic "Your topic" --preset neutral --provider gemini --model flash
+
+# Use Grok
+agora run --topic "Your topic" --preset neutral --provider grok
+
+# List providers and check which API keys are configured
+agora providers
+```
+
+Install optional provider dependencies:
+```bash
+pip install agora-debate[openai]   # For OpenAI/Grok
+pip install agora-debate[gemini]   # For Google Gemini
+pip install agora-debate[all]      # Everything
+```
+
+
 ## Installation
 
 ### macOS / Linux
