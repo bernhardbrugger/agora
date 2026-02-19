@@ -1,8 +1,7 @@
 from setuptools import setup, find_packages
 import os
 
-# Read README safely — never let this break installation
-long_description = "Multi-agent AI debates in your terminal - powered by Claude"
+long_description = "Multi-agent AI debates in your terminal - powered by AI"
 readme_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "README.md")
 try:
     with open(readme_path, encoding="utf-8") as f:
@@ -12,8 +11,8 @@ except Exception:
 
 setup(
     name="agora-debate",
-    version="0.2.1",
-    description="Multi-agent AI debates in your terminal - powered by Claude",
+    version="0.3.0",
+    description="Multi-agent AI debates in your terminal - supports Claude, GPT, Gemini, and Grok",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="Bernhard Brugger",
@@ -31,6 +30,12 @@ setup(
         "pyyaml>=6.0",
         "python-dotenv>=1.0",
     ],
+    extras_require={
+        "openai": ["openai>=1.0.0"],
+        "gemini": ["google-generativeai>=0.3.0"],
+        "grok": ["openai>=1.0.0"],
+        "all": ["openai>=1.0.0", "google-generativeai>=0.3.0"],
+    },
     entry_points={
         "console_scripts": [
             "agora=agora.cli:main",
