@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import sys
+from typing import Optional
 
 import click
 from dotenv import load_dotenv
@@ -18,7 +19,7 @@ console = Console()
 @click.group()
 @click.version_option(package_name="agora-debate")
 def cli():
-    """agora — Multi-agent debate framework powered by Claude."""
+    """agora - Multi-agent debate framework powered by Claude."""
     load_dotenv()
 
 
@@ -30,7 +31,7 @@ def cli():
 @click.option("--model", default="sonnet", help="Model to use: haiku ($0.01), sonnet ($0.10), opus ($1.00).")
 @click.option("--output", default="reports", help="Directory to save the report.")
 @click.option("--no-stream", is_flag=True, help="Disable streaming output.")
-def run(topic: str, agents: str, rounds: int, preset: str | None, model: str, output: str, no_stream: bool):
+def run(topic: str, agents: str, rounds: int, preset: Optional[str], model: str, output: str, no_stream: bool):
     """Run a multi-agent debate on a topic."""
     # Check API key
     if not os.environ.get("ANTHROPIC_API_KEY"):
@@ -82,7 +83,7 @@ def list_presets_cmd():
     for name in presets:
         data = load_preset(name)
         agents_str = ", ".join(a["name"] for a in data.get("agents", []))
-        console.print(f"  [cyan]{name}[/cyan] — {data.get('name', name)} ({agents_str})")
+        console.print(f"  [cyan]{name}[/cyan] - {data.get('name', name)} ({agents_str})")
 
 
 def main():
