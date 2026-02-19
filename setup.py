@@ -1,11 +1,18 @@
 from setuptools import setup, find_packages
+import os
 
-with open("README.md", encoding="utf-8") as f:
-    long_description = f.read()
+# Read README safely — never let this break installation
+long_description = "Multi-agent AI debates in your terminal - powered by Claude"
+readme_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "README.md")
+try:
+    with open(readme_path, encoding="utf-8") as f:
+        long_description = f.read()
+except Exception:
+    pass
 
 setup(
     name="agora-debate",
-    version="0.2.0",
+    version="0.2.1",
     description="Multi-agent AI debates in your terminal - powered by Claude",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -29,12 +36,13 @@ setup(
             "agora=agora.cli:main",
         ],
     },
-    python_requires=">=3.10",
+    python_requires=">=3.9",
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
