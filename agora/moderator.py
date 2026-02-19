@@ -2,24 +2,22 @@
 
 from __future__ import annotations
 
-import time
-import anthropic
+from typing import Optional
 
-from agora.agent import resolve_model
+from agora.providers.base import LLMProvider
 
 
 class Moderator:
     """Neutral moderator that analyzes the full debate and provides a synthesis."""
 
-    def __init__(self, model: str = "sonnet"):
-        self.model = resolve_model(model)
-        self.client = anthropic.Anthropic()
+    def __init__(self, provider: Optional[LLMProvider] = None):
+        self.provider = provider or LLMProvider.resolve("anthropic")
 
     def synthesize(self, topic: str, history: list[dict], agent_names: list[str]) -> str:
         """Read the full debate transcript and produce a synthesis."""
         transcript = self._format_transcript(history)
 
-        system_prompt = (
+        system = (
             "You are a neutral, highly analytical debate moderator.\n"
             "Your job is to synthesize a structured debate between multiple agents.\n"
             "Be fair, balanced, and insightful. Do not take sides unless the evidence clearly warrants it."
@@ -43,25 +41,7 @@ class Moderator:
             f"followed by a brief justification)"
         )
 
-        for attempt in range(3):
-            try:
-                response = self.client.messages.create(
-                    model=self.model,
-                    max_tokens=2048,
-                    system=system_prompt,
-                    messages=[{"role": "user", "content": user_prompt}],
-                )
-                return response.content[0].text
-            except anthropic.RateLimitError:
-                if attempt < 2:
-                    time.sleep(2 ** attempt)
-                else:
-                    raise
-            except anthropic.APIError:
-                if attempt < 2:
-                    time.sleep(1)
-                else:
-                    raise
+        return self.provider.complete(system, [{"role": "user", "content": user_prompt}], max_tokens=2048)
 
     @staticmethod
     def _format_transcript(history: list[dict]) -> str:
