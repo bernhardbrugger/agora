@@ -11,7 +11,7 @@ except Exception:
 
 setup(
     name="agora-debate",
-    version="0.3.0",
+    version="0.4.0",
     description="Multi-agent AI debates in your terminal - supports Claude, GPT, Gemini, and Grok",
     long_description=long_description,
     long_description_content_type="text/markdown",
