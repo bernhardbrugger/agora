@@ -55,11 +55,11 @@ agora run --topic "Your topic" --preset neutral --provider gemini --model flash
 agora providers
 ```
 
-Install optional provider dependencies:
+Install optional provider dependencies (from your clone; Agora is not published on PyPI):
 ```bash
-pip install agora-debate[openai]   # For OpenAI / Grok
-pip install agora-debate[gemini]   # For Google Gemini
-pip install agora-debate[all]      # Everything
+pip install -e ".[openai]"   # For OpenAI / Grok
+pip install -e ".[gemini]"   # For Google Gemini
+pip install -e ".[all]"      # Everything
 ```
 
 ---
@@ -292,6 +292,21 @@ agora run --topic "Should we raise prices?" --agents "CFO,Head of Sales,Customer
 # Generate a 4-agent neutral panel
 agora run --topic "Topic" --agents 4
 ```
+
+---
+
+## Limitations
+
+Agora is a small hobby project. Know what you are getting:
+
+- **No tests, no CI.** Changes are checked by running debates by hand.
+- **Install from source only.** It is not on PyPI. Presets are read from the repo's `personas/` folder, so use the editable install (`pip install -e .`) shown above.
+- **Model aliases are pinned to 2025 model IDs** (for example `sonnet` → `claude-sonnet-4-20250514`, `flash` → `gemini-2.0-flash`). Providers retire models; if an alias fails, pass a current full model ID with `--model`. Gemini support uses the older `google-generativeai` SDK.
+- **The consensus meter is a rough heuristic.** It combines keyword overlap with simple word matching on each agent's `POSITION:` line. It does not understand meaning and can misread negations.
+- **Every agent is the same underlying model** playing a role. Debates can converge because of that, not because an argument won.
+- **Named personas are role-play.** Presets such as `investment_legends`, `tech_legends` or `world_leaders` produce the model's imitation of a style, not the real person's views.
+- **Not advice.** Output is generated text for thinking things through. It is not investment, financial, legal or medical advice. Check facts before acting on anything.
+- **Cost.** A default 5-round debate with 3 agents makes roughly 20 model calls (turns, moderator checks, synthesis) and you pay for them on your own API key.
 
 ---
 
