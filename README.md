@@ -318,7 +318,7 @@ agora run --topic "Topic" --agents 4
 
 Agora is a small hobby project. Know what you are getting:
 
-- **No tests, no CI.** Changes are checked by running debates by hand.
+- **Tests cover the logic, not the models.** CI runs `pytest` on Linux and Windows (Python 3.9 and 3.13): phases, consensus scoring, presets, reports and the `run` command end to end through `--dry-run`. No test calls a real provider, so the provider code (API calls, retries, model IDs) is only checked by running debates by hand.
 - **Install from source only.** It is not on PyPI. Presets are read from the repo's `personas/` folder, so use the editable install (`pip install -e .`) shown above.
 - **Model aliases are pinned to 2025 model IDs** (for example `sonnet` → `claude-sonnet-4-20250514`, `flash` → `gemini-2.0-flash`). Providers retire models; if an alias fails, pass a current full model ID with `--model`. Gemini support uses the older `google-generativeai` SDK.
 - **The consensus meter is a rough heuristic.** It combines keyword overlap with simple word matching on each agent's `POSITION:` line. It does not understand meaning and can misread negations.
