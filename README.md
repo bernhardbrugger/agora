@@ -117,6 +117,25 @@ Or create a `.env` file in the project root — Agora will load it automatically
 
 ## 🚀 Quick Start
 
+Try the whole flow first without an API key and without cost. `--dry-run` uses canned offline replies: you see the phases, the moderator, the consensus meter and the saved report, but the text is placeholder text, not a debate.
+
+```bash
+agora run --dry-run --topic "Should cities ban cars from their centres?" --rounds 3
+```
+
+From that run (the speakers alternate between "support" and "oppose", then all close on "support"):
+
+```
+  Consensus Meter (Round 1):
+  ███████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░ 46% — Mixed Positions
+  Consensus Meter (Round 2):
+  ██████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 45% — Mixed Positions
+  Consensus Meter (Round 3):
+  ███████████████████████████████████████████░░░░░░░ 86% — High Consensus
+```
+
+With a key set, a real debate:
+
 ```bash
 # Classic balanced debate — 5 structured rounds
 agora run --topic "Should we colonize Mars?" --preset neutral

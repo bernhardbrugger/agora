@@ -19,7 +19,8 @@ PROVIDER_HELP = """LLM provider to use:
   anthropic  — Claude (default). Needs ANTHROPIC_API_KEY
   openai     — GPT. Needs OPENAI_API_KEY
   gemini     — Google Gemini. Needs GOOGLE_API_KEY
-  grok       — xAI Grok. Needs XAI_API_KEY"""
+  grok       — xAI Grok. Needs XAI_API_KEY
+  dryrun     — canned offline replies, no key (same as --dry-run)"""
 
 MODEL_HELP = """Model to use (provider-specific):
   Anthropic: haiku, sonnet (default), opus
@@ -80,6 +81,10 @@ def cli():
     "--no-interventions", is_flag=True, default=False,
     help="Disable moderator interventions between rounds.",
 )
+@click.option(
+    "--dry-run", "dry_run", is_flag=True, default=False,
+    help="Use canned offline replies instead of a model: no API key, no cost. Shows the flow, not a debate.",
+)
 def run(
     topic: str,
     agents: str,
@@ -92,8 +97,12 @@ def run(
     dynamic: bool,
     convergence: float,
     no_interventions: bool,
+    dry_run: bool,
 ) -> None:
     """Run a structured multi-agent debate on any topic."""
+    if dry_run:
+        provider, model = "dryrun", None
+
     # Validate provider and API key early
     try:
         from agora.providers.base import LLMProvider

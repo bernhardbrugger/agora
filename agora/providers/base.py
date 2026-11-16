@@ -25,12 +25,14 @@ class LLMProvider(ABC):
         from agora.providers.openai import OpenAIProvider
         from agora.providers.gemini import GeminiProvider
         from agora.providers.grok import GrokProvider
+        from agora.providers.dryrun import DryRunProvider
 
         providers = {
             "anthropic": AnthropicProvider,
             "openai": OpenAIProvider,
             "gemini": GeminiProvider,
             "grok": GrokProvider,
+            "dryrun": DryRunProvider,
         }
 
         name = provider.lower()
