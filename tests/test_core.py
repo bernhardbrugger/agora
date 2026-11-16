@@ -11,7 +11,7 @@ import pytest
 
 from agora import personas
 from agora.agent import PHASE_INSTRUCTIONS, PHASE_LABELS, format_history
-from agora.debate import _save_report, calculate_consensus, determine_phase
+from agora.debate import _save_report, calculate_consensus, determine_phase, position_polarity
 
 
 # ── determine_phase ─────────────────────────────────────────────────────────
@@ -169,3 +169,23 @@ def test_report_contains_rounds_scores_and_synthesis(tmp_path):
     assert "## Round 1 · Opening Statement · Consensus: 25%" in report
     assert "## Round 2 · Closing Argument · Consensus: 50%" in report
     assert report.rstrip().endswith("They partly agree.")
+
+
+# ── position polarity ───────────────────────────────────────────────────────
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ("POSITION: I support the economic plan.", 1.0),       # "economic" contains "no"
+        ("POSITION: I oppose it, as I said before.", -1.0),    # "before" contains "for"
+        ("POSITION: I disagree.", -1.0),                       # "disagree" contains "agree"
+        ("POSITION: We should not do this.", -1.0),
+        ("POSITION: We should do this.", 1.0),
+        ("POSITION: I am for it.", 1.0),
+        ("POSITION: Support, favor, agree, endorse.", 1.0),    # clamped
+        ("Body text.\nposition: I reject the proposal.\nMore text.", -1.0),
+        ("No position tag here, I support it.", 0.0),
+    ],
+)
+def test_position_polarity_matches_whole_words(text, expected):
+    assert position_polarity(text) == expected

@@ -30,6 +30,32 @@ def determine_phase(round_num: int, total_rounds: int) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Position polarity
+# ---------------------------------------------------------------------------
+
+_POSITION_RE = re.compile(r"POSITION:\s*(.+?)(?:\n|$)", re.IGNORECASE)
+_FOR_WORDS = {"support", "favor", "favour", "agree", "endorse", "beneficial", "for", "yes", "should"}
+_AGAINST_WORDS = {"oppose", "against", "reject", "harmful", "disagree", "no", "should not", "bad"}
+
+
+def position_polarity(text: str) -> float:
+    """Polarity of the POSITION: line, -1.0 (against) to 1.0 (for); 0.0 without a tag."""
+    m = _POSITION_RE.search(text)
+    if not m:
+        return 0.0
+    pos = m.group(1).lower()
+
+    def has(word: str) -> bool:
+        # whole words only: "economic" must not count as "no", "before" not as "for"
+        return re.search(rf"\b{re.escape(word)}\b", pos) is not None
+
+    score = -sum(1.0 for w in _AGAINST_WORDS if has(w))
+    pos = re.sub(r"\bshould not\b", " ", pos)  # "should not" must not also count as "should"
+    score += sum(1.0 for w in _FOR_WORDS if has(w))
+    return max(-1.0, min(1.0, score))
+
+
+# ---------------------------------------------------------------------------
 # Consensus calculation
 # ---------------------------------------------------------------------------
 
@@ -77,21 +103,7 @@ def calculate_consensus(history: list[dict], round_num: int) -> float:
                 sims.append(len(a & b) / len(a | b))
     keyword_score = sum(sims) / len(sims) if sims else 0.5
 
-    # ── Position polarity ────────────────────────────────────────────
-    _pos_pattern = re.compile(r"POSITION:\s*(.+?)(?:\n|$)", re.IGNORECASE)
-    _FOR_WORDS = {"support", "favor", "favour", "agree", "endorse", "beneficial", "for", "yes", "should"}
-    _AGAINST_WORDS = {"oppose", "against", "reject", "harmful", "disagree", "no", "should not", "bad"}
-
-    def polarity(text: str) -> float:
-        m = _pos_pattern.search(text)
-        if not m:
-            return 0.0
-        pos = m.group(1).lower()
-        score = sum(1.0 for w in _FOR_WORDS if w in pos)
-        score -= sum(1.0 for w in _AGAINST_WORDS if w in pos)
-        return max(-1.0, min(1.0, score))
-
-    polarities = [polarity(t) for t in round_texts]
+    polarities = [position_polarity(t) for t in round_texts]
     if any(p != 0.0 for p in polarities):
         avg = sum(polarities) / len(polarities)
         variance = sum((p - avg) ** 2 for p in polarities) / len(polarities)
