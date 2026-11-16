@@ -50,7 +50,7 @@ def cli():
 )
 @click.option(
     "--preset", default=None,
-    help="Use a built-in persona preset (e.g. investment_legends). Run 'agora presets' to list all.",
+    help="Use a built-in persona preset (e.g. investment_styles). Run 'agora presets' to list all.",
 )
 @click.option(
     "--provider", default="anthropic",

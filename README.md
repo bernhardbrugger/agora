@@ -18,7 +18,7 @@
 
 ## Features
 
-- 🎭 **16 Built-in Presets** — From investment legends to ethics panels to medical boards
+- 🎭 **16 Built-in Presets** — From investment styles to ethics panels to medical boards
 - 🔄 **Structured Debate Phases** — Opening → Rebuttal → Cross-Examination → Closing, each with distinct argumentation rules
 - 🏛️ **Active Moderation** — The moderator intervenes between rounds with Socratic challenges when the debate stalls or goes in circles
 - 📍 **Position Tracking** — Every agent commits to an explicit position each round, making evolution visible
@@ -121,8 +121,8 @@ Or create a `.env` file in the project root — Agora will load it automatically
 # Classic balanced debate — 5 structured rounds
 agora run --topic "Should we colonize Mars?" --preset neutral
 
-# Investment thesis from legendary investors
-agora run --topic "Is NVIDIA overvalued at current prices?" --preset investment_legends
+# Investment thesis from competing investment styles
+agora run --topic "Is NVIDIA overvalued at current prices?" --preset investment_styles
 
 # Ethics panel — 4 competing moral frameworks
 agora run --topic "Should AI systems be allowed to make medical decisions?" --preset ethics_panel
@@ -142,8 +142,8 @@ agora run --topic "Should we pivot from B2C to B2B SaaS?" --preset startup_team
 # Philosophers at war
 agora run --topic "Is it ethical to lie to protect someone's feelings?" --preset philosophy
 
-# Tech legends on product strategy
-agora run --topic "Should our startup go open-source?" --preset tech_legends
+# Tech builders on product strategy
+agora run --topic "Should our startup go open-source?" --preset tech_builders
 
 # Quick pro/con — sharpest 2-agent format
 agora run --topic "Should I quit my job to start a company?" --preset devils_advocate
@@ -221,16 +221,16 @@ The final synthesis covers eight structured sections:
 | `debate_club` | The Optimist, The Pessimist, The Contrarian, The Pragmatist | Multi-perspective stress testing |
 | `devils_advocate` | The Proponent, The Opponent | Quick, sharp pro/con on any topic |
 | `investor_panel` | The VC, The Angel, The Sceptic | Startup & investment decisions |
-| `investment_legends` | Buffett, Dalio, Wood | Investment thesis analysis |
+| `investment_styles` | The Value Investor, The Macro Strategist, The Disruption Bull | Investment thesis analysis |
 | `startup_team` | CEO, CTO, CFO | Business strategy & technical decisions |
-| `tech_legends` | Jobs, Torvalds, Altman | Technology strategy & product decisions |
+| `tech_builders` | The Product Perfectionist, The Pragmatic Systems Engineer, The Frontier AI Builder | Technology strategy & product decisions |
 | `philosophy` | Stoic, Utilitarian, Existentialist, Pragmatist | Ethics, values, life decisions |
 | `ethics_panel` | Utilitarian, Kantian, Virtue Ethicist, Care Ethicist | Moral philosophy & applied ethics |
 | `scientific_panel` | The Empiricist, The Theorist, The Sceptic, Translational Scientist | Science & research questions |
-| `science_minds` | Einstein, Feynman, Curie | Scientific intuition & discovery |
+| `science_archetypes` | The Theorist, The Explainer, The Experimentalist | Scientific intuition & discovery |
 | `medical_panel` | Clinician, Epidemiologist, Bioethicist, Health Economist | Healthcare & public health decisions |
 | `legal_panel` | The Advocate, The Judge, The Legal Scholar, The Policy Analyst | Legal & regulatory questions |
-| `world_leaders` | Churchill, Mandela, Merkel | Geopolitics, policy & leadership |
+| `statecraft` | The Crisis Leader, The Reconciler, The Consensus Builder | Geopolitics, policy & leadership |
 | `product_design` | The User, The Designer, The Engineer, The PM | Product & UX decisions |
 | `crypto_council` | The Maximalist, The DeFi Builder, The Sceptic | Crypto & blockchain evaluation |
 
@@ -304,7 +304,7 @@ Agora is a small hobby project. Know what you are getting:
 - **Model aliases are pinned to 2025 model IDs** (for example `sonnet` → `claude-sonnet-4-20250514`, `flash` → `gemini-2.0-flash`). Providers retire models; if an alias fails, pass a current full model ID with `--model`. Gemini support uses the older `google-generativeai` SDK.
 - **The consensus meter is a rough heuristic.** It combines keyword overlap with simple word matching on each agent's `POSITION:` line. It does not understand meaning and can misread negations.
 - **Every agent is the same underlying model** playing a role. Debates can converge because of that, not because an argument won.
-- **Named personas are role-play.** Presets such as `investment_legends`, `tech_legends` or `world_leaders` produce the model's imitation of a style, not the real person's views.
+- **Personas are archetypes, not real people.** The presets describe styles of thinking (for example the value investor or the crisis leader). They deliberately do not name or imitate real people, living or dead; before 2026-11-16 four presets did, and they were replaced for that reason. Your own presets should follow the same rule.
 - **Not advice.** Output is generated text for thinking things through. It is not investment, financial, legal or medical advice. Check facts before acting on anything.
 - **Cost.** A default 5-round debate with 3 agents makes roughly 20 model calls (turns, moderator checks, synthesis) and you pay for them on your own API key.
 
