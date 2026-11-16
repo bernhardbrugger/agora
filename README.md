@@ -127,7 +127,7 @@ From that run (the speakers alternate between "support" and "oppose", then all c
 
 ```
   Consensus Meter (Round 1):
-  ███████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░ 46% — Mixed Positions
+  ███████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░ 47% — Mixed Positions
   Consensus Meter (Round 2):
   ██████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 45% — Mixed Positions
   Consensus Meter (Round 3):

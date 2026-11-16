@@ -200,13 +200,18 @@ def print_moderator_synthesis(text: str) -> None:
 
 # ── Consensus meter ───────────────────────────────────────────────────────────
 
+def _percent(score: float) -> int:
+    """Whole percent, rounded exactly as the saved report writes it ({score:.0%})."""
+    return int(f"{score:.0%}".rstrip("%"))
+
+
 def print_consensus_meter(
     score: float,
     round_num: int,
     all_scores: Optional[list[float]] = None,
 ) -> None:
     """Print a visual consensus bar with trend tracking."""
-    pct = int(score * 100)
+    pct = _percent(score)
 
     if pct < 25:
         color, label = "red", "Strong Disagreement"
@@ -234,7 +239,7 @@ def print_consensus_meter(
             trend = f"[red]▼ {delta:.0%} (diverging)[/red]"
         else:
             trend = "[dim]→ stable[/dim]"
-        history_bar = " ".join(f"{int(s * 100)}%" for s in all_scores)
+        history_bar = " ".join(f"{_percent(s)}%" for s in all_scores)
         console.print(f"  Trend: {trend}  [{history_bar}]")
 
     console.print()
