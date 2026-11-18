@@ -71,7 +71,9 @@ class Moderator:
 
         result = self.provider.complete(system, [{"role": "user", "content": user}], max_tokens=350)
         result = result.strip()
-        return None if result.upper().startswith("NONE") else result
+        # Only a bare "NONE" (maybe with a full stop) means no intervention; a real
+        # question may well start with "None of you ..." or "Nonetheless ...".
+        return None if result.rstrip(".!").strip().upper() == "NONE" else result
 
     # ------------------------------------------------------------------
     # Final synthesis
