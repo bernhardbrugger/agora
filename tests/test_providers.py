@@ -1,0 +1,214 @@
+"""OpenAI and Gemini providers against fake SDK modules: no network, no key, no cost."""
+
+from __future__ import annotations
+
+import sys
+import types
+from types import SimpleNamespace as NS
+
+import pytest
+
+
+class RateLimited(Exception):
+    pass
+
+
+# ── fake openai SDK ──────────────────────────────────────────────────────────
+
+class FakeCompletions:
+    def __init__(self, outcomes):
+        self.outcomes = list(outcomes)  # exceptions to raise, then the answer
+        self.calls = []
+
+    def create(self, **kwargs):
+        self.calls.append(kwargs)
+        outcome = self.outcomes.pop(0)
+        if isinstance(outcome, Exception):
+            raise outcome
+        if kwargs.get("stream"):
+            return iter(
+                NS(choices=[NS(delta=NS(content=c))] if c is not ... else [])
+                for c in outcome
+            )
+        return NS(choices=[NS(message=NS(content=outcome))])
+
+
+@pytest.fixture
+def openai_sdk(monkeypatch):
+    sdk = types.ModuleType("openai")
+    sdk.made = []
+
+    def OpenAI(**kwargs):
+        client = NS(kwargs=kwargs, chat=NS(completions=FakeCompletions(sdk.outcomes)))
+        sdk.made.append(client)
+        return client
+
+    sdk.OpenAI = OpenAI
+    sdk.outcomes = ["ok"]
+    monkeypatch.setitem(sys.modules, "openai", sdk)
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    monkeypatch.setattr("time.sleep", lambda s: sdk.__dict__.setdefault("slept", []).append(s))
+    return sdk
+
+
+def _openai(model=None):
+    from agora.providers.openai import OpenAIProvider
+
+    return OpenAIProvider(model=model)
+
+
+def test_openai_without_a_key_says_which_variable_is_missing(openai_sdk, monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY")
+    with pytest.raises(EnvironmentError, match="OPENAI_API_KEY not set"):
+        _openai()
+
+
+@pytest.mark.parametrize(
+    "model, api_model",
+    [(None, "gpt-4o"), ("gpt4o-mini", "gpt-4o-mini"), ("GPT4", "gpt-4o"), ("gpt-5-custom", "gpt-5-custom")],
+)
+def test_openai_resolves_aliases_and_passes_unknown_names_through(openai_sdk, model, api_model):
+    provider = _openai(model)
+    assert provider.model == api_model
+    assert provider.display_name == (model or "gpt4o")
+    assert openai_sdk.made[0].kwargs == {"api_key": "test-key"}
+
+
+def test_openai_complete_puts_the_system_prompt_first(openai_sdk):
+    provider = _openai()
+    answer = provider.complete("be brief", [{"role": "user", "content": "hi"}], max_tokens=77)
+    assert answer == "ok"
+    (call,) = provider.client.chat.completions.calls
+    assert call == {
+        "model": "gpt-4o",
+        "max_tokens": 77,
+        "messages": [{"role": "system", "content": "be brief"}, {"role": "user", "content": "hi"}],
+    }
+
+
+def test_openai_retries_rate_limits_twice_with_backoff(openai_sdk):
+    openai_sdk.outcomes = [RateLimited("Rate limit reached"), RateLimited("rate limit"), "third time"]
+    provider = _openai()
+    assert provider.complete("s", []) == "third time"
+    assert len(provider.client.chat.completions.calls) == 3
+    assert openai_sdk.slept == [1, 2]
+
+
+def test_openai_gives_up_after_three_rate_limits(openai_sdk):
+    openai_sdk.outcomes = [RateLimited("rate")] * 3
+    provider = _openai()
+    with pytest.raises(RateLimited):
+        provider.complete("s", [])
+    assert len(provider.client.chat.completions.calls) == 3
+
+
+def test_openai_does_not_retry_other_errors(openai_sdk):
+    openai_sdk.outcomes = [ValueError("invalid model")]
+    provider = _openai()
+    with pytest.raises(ValueError, match="invalid model"):
+        provider.complete("s", [])
+    assert len(provider.client.chat.completions.calls) == 1
+    assert not hasattr(openai_sdk, "slept")
+
+
+def test_openai_stream_yields_text_and_skips_empty_chunks(openai_sdk):
+    openai_sdk.outcomes = [["Hel", None, ..., "lo", ""]]
+    provider = _openai()
+    assert list(provider.stream("s", [{"role": "user", "content": "hi"}])) == ["Hel", "lo"]
+    (call,) = provider.client.chat.completions.calls
+    assert call["stream"] is True
+    assert call["messages"][0] == {"role": "system", "content": "s"}
+
+
+# ── fake google.generativeai SDK ─────────────────────────────────────────────
+
+class FakeModel:
+    def __init__(self, model_id, outcomes):
+        self.model_id = model_id
+        self.outcomes = outcomes
+        self.calls = []
+
+    def generate_content(self, prompt, generation_config, stream=False):
+        self.calls.append({"prompt": prompt, "config": generation_config, "stream": stream})
+        outcome = self.outcomes.pop(0)
+        if isinstance(outcome, Exception):
+            raise outcome
+        if stream:
+            return iter(NS(text=t) for t in outcome)
+        return NS(text=outcome)
+
+
+@pytest.fixture
+def genai_sdk(monkeypatch):
+    sdk = types.ModuleType("google.generativeai")
+    sdk.outcomes = ["ok"]
+    sdk.configured = []
+    sdk.configure = lambda **kw: sdk.configured.append(kw)
+    sdk.GenerativeModel = lambda model_id: FakeModel(model_id, sdk.outcomes)
+    google = types.ModuleType("google")
+    google.generativeai = sdk
+    monkeypatch.setitem(sys.modules, "google", google)
+    monkeypatch.setitem(sys.modules, "google.generativeai", sdk)
+    monkeypatch.setenv("GOOGLE_API_KEY", "test-key")
+    monkeypatch.setattr("time.sleep", lambda s: sdk.__dict__.setdefault("slept", []).append(s))
+    return sdk
+
+
+def _gemini(model=None):
+    from agora.providers.gemini import GeminiProvider
+
+    return GeminiProvider(model=model)
+
+
+def test_gemini_without_a_key_says_which_variable_is_missing(genai_sdk, monkeypatch):
+    monkeypatch.delenv("GOOGLE_API_KEY")
+    with pytest.raises(EnvironmentError, match="GOOGLE_API_KEY not set"):
+        _gemini()
+    assert genai_sdk.configured == []
+
+
+@pytest.mark.parametrize(
+    "model, api_model",
+    [(None, "gemini-2.0-flash"), ("Pro", "gemini-2.0-pro"), ("gemini-2.5-flash", "gemini-2.5-flash")],
+)
+def test_gemini_configures_the_key_and_resolves_aliases(genai_sdk, model, api_model):
+    provider = _gemini(model)
+    assert genai_sdk.configured == [{"api_key": "test-key"}]
+    assert provider.model.model_id == api_model
+
+
+def test_gemini_folds_system_and_messages_into_one_prompt(genai_sdk):
+    provider = _gemini()
+    answer = provider.complete(
+        "be brief",
+        [{"role": "user", "content": "hi"}, {"role": "assistant", "content": "hello"}],
+        max_tokens=50,
+    )
+    assert answer == "ok"
+    (call,) = provider.model.calls
+    assert call["prompt"] == "be brief\n\n\n\nUSER: hi\n\nASSISTANT: hello"
+    assert call["config"] == {"max_output_tokens": 50}
+    assert call["stream"] is False
+
+
+@pytest.mark.parametrize("message", ["429 Resource has been exhausted (quota)", "Rate limit"])
+def test_gemini_retries_quota_and_rate_errors(genai_sdk, message):
+    genai_sdk.outcomes[:] = [RateLimited(message), "later"]
+    provider = _gemini()
+    assert provider.complete("s", []) == "later"
+    assert genai_sdk.slept == [1]
+
+
+def test_gemini_does_not_retry_other_errors(genai_sdk):
+    genai_sdk.outcomes[:] = [ValueError("blocked by safety")]
+    provider = _gemini()
+    with pytest.raises(ValueError, match="safety"):
+        provider.complete("s", [])
+    assert len(provider.model.calls) == 1
+
+
+def test_gemini_stream_yields_text_and_skips_empty_chunks(genai_sdk):
+    genai_sdk.outcomes[:] = [["Hel", "", "lo"]]
+    provider = _gemini()
+    assert list(provider.stream("s", [])) == ["Hel", "lo"]
+    assert provider.model.calls[0]["stream"] is True
