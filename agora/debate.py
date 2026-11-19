@@ -11,6 +11,7 @@ from agora.agent import Agent, PHASE_LABELS
 from agora.moderator import Moderator
 from agora.providers.base import LLMProvider
 from agora import renderer
+from agora.transcript import build_transcript, save_transcript
 
 
 # ---------------------------------------------------------------------------
@@ -160,6 +161,7 @@ def run_debate(
 
     history: list[dict] = []
     consensus_scores: list[float] = []
+    interventions: dict[int, str] = {}
 
     effective_rounds = rounds
     current_round = 0
@@ -177,6 +179,7 @@ def run_debate(
                 topic, history, agent_names, current_round, last_score
             )
             if intervention:
+                interventions[current_round] = intervention
                 renderer.print_moderator_intervention(intervention, current_round)
 
         # ── Agent responses ──────────────────────────────────────────────
@@ -226,7 +229,13 @@ def run_debate(
         topic, agent_configs, effective_rounds, provider_label,
         history, synthesis, consensus_scores, output_dir,
     )
+    transcript = build_transcript(
+        topic, agent_configs, rounds, provider_label,
+        history, synthesis, consensus_scores, interventions,
+    )
+    transcript_path = save_transcript(Path(report_path).with_suffix(".json"), transcript)
     renderer.print_saved(report_path)
+    renderer.print_saved(transcript_path, "Transcript")
     return report_path
 
 

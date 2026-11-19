@@ -260,10 +260,10 @@ def print_convergence_notice(score: float) -> None:
 
 # ── Misc ──────────────────────────────────────────────────────────────────────
 
-def print_saved(path: str) -> None:
-    """Print the report save location."""
+def print_saved(path: str, label: str = "Report") -> None:
+    """Print where a file was saved."""
     console.print()
     console.print(
-        f"  [bold green]✓[/bold green] Report saved: [underline]{path}[/underline]"
+        f"  [bold green]✓[/bold green] {label} saved: [underline]{path}[/underline]"
     )
     console.print()

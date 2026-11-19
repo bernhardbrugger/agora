@@ -7,6 +7,9 @@ reconstructed from the git history.
 ## [Unreleased]
 
 ### Added
+- Every run also writes a JSON transcript next to the Markdown report (same name, `.json`): agents,
+  rounds with phase, consensus score, moderator intervention and each turn's `POSITION:` and polarity, plus
+  the synthesis. Documented as a JSON Schema in `docs/transcript.schema.json` (version 1).
 - `agora run --dry-run` (same as `--provider dryrun`): a full debate offline with canned, deterministic
   answers, no API key and no cost.
 - Tests (64) for debate phases, the consensus score, presets, agent specs, reports, the dry run, the

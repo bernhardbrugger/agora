@@ -302,7 +302,8 @@ agora run --topic "Topic" --preset neutral --no-stream
 agora run --topic "Topic" --preset startup_team --model opus
 agora run --topic "Topic" --preset neutral --provider openai --model gpt4o-mini
 
-# Save reports to a custom directory
+# Save reports to a custom directory. Each run writes debate_<topic>_<time>.md and, with the same name,
+# a .json transcript (rounds, phases, scores, moderator, synthesis; schema: docs/transcript.schema.json)
 agora run --topic "Topic" --preset neutral --output ./my_reports
 
 # Use custom agent names (each gets a generic analytical persona)

@@ -29,5 +29,5 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       # editable install: the presets are read from the repository's personas/ folder
-      - run: python -m pip install -e . pytest
+      - run: python -m pip install -e . pytest jsonschema
       - run: python -m pytest -q
