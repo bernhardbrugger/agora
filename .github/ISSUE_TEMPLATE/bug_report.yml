@@ -1,0 +1,44 @@
+name: Bug report
+description: A crash, a wrong phase or consensus score, a broken report, or a provider error
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please never paste an API key. If you can, reproduce with `--dry-run`
+        (canned offline replies): then we can run exactly what you ran.
+  - type: input
+    id: command
+    attributes:
+      label: Command
+      placeholder: python -m agora run --topic "..." --preset investment_styles --rounds 3 --dry-run
+    validations:
+      required: true
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Provider
+      options: [dryrun, anthropic, openai, gemini, grok]
+    validations:
+      required: true
+  - type: textarea
+    id: expected-actual
+    attributes:
+      label: What you expected and what happened
+      description: For a crash, paste the full traceback. For a wrong debate, paste the relevant part of the report.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: agora version
+      description: Output of `python -m agora --version`
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Python version and OS
+      placeholder: Python 3.12, Windows 11
+    validations:
+      required: true
