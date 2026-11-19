@@ -127,4 +127,6 @@ def test_cli_reports_a_file_that_is_not_a_transcript(tmp_path):
     bad.write_text("[]", encoding="utf-8")
     result = CliRunner().invoke(cli, ["replay", str(bad)])
     assert result.exit_code == 1
-    assert "not an agora transcript" in result.output
+    text = " ".join(result.output.split())  # rich wraps long lines at the terminal width
+    assert "not an agora transcript" in text
+    assert text.count("bad.json") == 1

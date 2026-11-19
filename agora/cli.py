@@ -184,8 +184,11 @@ def replay_cmd(transcript: str, output: Optional[str]) -> None:
 
     try:
         path = write_replay(transcript, output)
-    except (ValueError, KeyError, TypeError) as exc:
-        console.print(f"[bold red]Error:[/bold red] cannot read {transcript}: {exc}")
+    except ValueError as exc:  # the message already names the file
+        console.print(f"[bold red]Error:[/bold red] {exc}")
+        sys.exit(1)
+    except (KeyError, TypeError) as exc:
+        console.print(f"[bold red]Error:[/bold red] {transcript} is missing a field the replay needs: {exc}")
         sys.exit(1)
     console.print(f"  [bold green]✓[/bold green] Replay saved: [underline]{path}[/underline]")
 
