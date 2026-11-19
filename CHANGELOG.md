@@ -7,6 +7,9 @@ reconstructed from the git history.
 ## [Unreleased]
 
 ### Added
+- `agora replay TRANSCRIPT.json [-o page.html]`: one self-contained HTML page with a position grid
+  (for/against per agent and round, linked to the speech), the consensus per round, every speech, the
+  moderator's interventions and the synthesis. It loads nothing from the network and escapes all model text.
 - Every run also writes a JSON transcript next to the Markdown report (same name, `.json`): agents,
   rounds with phase, consensus score, moderator intervention and each turn's `POSITION:` and polarity, plus
   the synthesis. Documented as a JSON Schema in `docs/transcript.schema.json` (version 1).

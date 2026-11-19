@@ -172,6 +172,24 @@ def run(
     )
 
 
+@cli.command(name="replay")
+@click.argument("transcript", type=click.Path(exists=True, dir_okay=False))
+@click.option(
+    "-o", "--output", default=None,
+    help="Where to write the HTML page (default: next to the transcript, .html).",
+)
+def replay_cmd(transcript: str, output: Optional[str]) -> None:
+    """Turn a saved JSON transcript into a self-contained HTML replay page."""
+    from agora.replay import write_replay
+
+    try:
+        path = write_replay(transcript, output)
+    except (ValueError, KeyError, TypeError) as exc:
+        console.print(f"[bold red]Error:[/bold red] cannot read {transcript}: {exc}")
+        sys.exit(1)
+    console.print(f"  [bold green]✓[/bold green] Replay saved: [underline]{path}[/underline]")
+
+
 @cli.command(name="presets")
 def list_presets_cmd() -> None:
     """List all available persona presets with their participants."""
