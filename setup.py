@@ -22,6 +22,7 @@ setup(
     include_package_data=True,
     package_data={
         "": ["personas/*.yaml"],
+        "agora.formats": ["*.yaml"],
     },
     install_requires=[
         "anthropic>=0.40.0",

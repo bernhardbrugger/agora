@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Optional
 
 from rich.console import Console
+from rich.markup import escape
 from rich.live import Live
 from rich.panel import Panel
 from rich.markdown import Markdown
@@ -57,6 +58,13 @@ def print_header(
 
     console.print()
     console.print(Rule(style="bright_blue"))
+    console.print()
+
+
+def print_disclaimer(format_name: str, disclaimer: str) -> None:
+    """Print a format's name and disclaimer before the first round."""
+    console.print(f"[bold]Format:[/bold] {escape(format_name)}")
+    console.print(f"[bold yellow]Disclaimer:[/bold yellow] {escape(disclaimer)}")
     console.print()
 
 

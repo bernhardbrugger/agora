@@ -129,6 +129,7 @@ def run_debate(
     dynamic: bool = False,
     convergence_threshold: float = 0.75,
     moderator_interventions: bool = True,
+    debate_format: Optional[dict] = None,
 ) -> str:
     """
     Run a full structured debate and return the path to the saved report.
@@ -141,7 +142,13 @@ def run_debate(
 
     With --dynamic, the debate can terminate early if the convergence threshold
     is met, jumping immediately to a closing round.
+
+    ``debate_format`` (from ``agora.formats.load_format``) fixes the phase of every
+    round, adds its disclaimer to the terminal and the report, and replaces the
+    moderator's synthesis outline with the format's own (e.g. a decision memo).
     """
+    phases = debate_format["phases"] if debate_format else None
+    disclaimer = debate_format["disclaimer"] if debate_format else None
     llm = LLMProvider.resolve(provider_name, model=model)
     provider_label = f"{provider_name}/{llm.display_name}"
 
@@ -158,6 +165,8 @@ def run_debate(
     moderator = Moderator(provider=llm)
 
     renderer.print_header(topic, agent_names, rounds, provider_label)
+    if debate_format:
+        renderer.print_disclaimer(debate_format["name"], disclaimer)
 
     history: list[dict] = []
     consensus_scores: list[float] = []
@@ -168,7 +177,10 @@ def run_debate(
 
     while current_round < effective_rounds:
         current_round += 1
-        phase = determine_phase(current_round, effective_rounds)
+        if phases and effective_rounds == len(phases):
+            phase = phases[current_round - 1]
+        else:  # no format, or --dynamic cut the debate short
+            phase = determine_phase(current_round, effective_rounds)
         renderer.print_round_header(current_round, effective_rounds, phase)
 
         # ── Moderator intervention (skip round 1 — no history yet) ──────
@@ -222,12 +234,17 @@ def run_debate(
 
     # ── Moderator final synthesis ────────────────────────────────────────
     renderer.print_thinking("Moderator")
-    synthesis = moderator.synthesize(topic, history, agent_names, consensus_scores)
+    synthesis = moderator.synthesize(
+        topic, history, agent_names, consensus_scores,
+        instructions=debate_format["synthesis"] if debate_format else None,
+    )
     renderer.print_moderator_synthesis(synthesis)
 
     report_path = _save_report(
         topic, agent_configs, effective_rounds, provider_label,
         history, synthesis, consensus_scores, output_dir,
+        format_name=debate_format["name"] if debate_format else None,
+        disclaimer=disclaimer,
     )
     transcript = build_transcript(
         topic, agent_configs, rounds, provider_label,
@@ -252,6 +269,8 @@ def _save_report(
     synthesis: str,
     consensus_scores: list[float],
     output_dir: str,
+    format_name: Optional[str] = None,
+    disclaimer: Optional[str] = None,
 ) -> str:
     """Serialise the full debate as a Markdown report."""
     out = Path(output_dir)
@@ -267,14 +286,19 @@ def _save_report(
         f"# Debate: {topic}",
         "",
         f"**Date:** {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+    ]
+    if format_name:
+        lines.append(f"**Format:** {format_name}")
+    lines += [
         f"**Rounds:** {rounds}",
         f"**Provider:** {provider_label}",
         f"**Agents:** {', '.join(a['name'] for a in agent_configs)}",
         f"**Consensus trend:** {trend}",
         "",
-        "---",
-        "",
     ]
+    if disclaimer:
+        lines += [f"> **Disclaimer:** {disclaimer}", ""]
+    lines += ["---", ""]
 
     current_round: Optional[int] = None
     for entry in history:

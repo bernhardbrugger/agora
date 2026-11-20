@@ -46,12 +46,16 @@ def cli():
     help="Comma-separated agent names OR a number for neutral archetypes (e.g. '3' or 'CEO,CTO,CFO').",
 )
 @click.option(
-    "--rounds", default=5, type=int,
-    help="Number of debate rounds (default: 5). Minimum 3 recommended for full phase coverage.",
+    "--rounds", default=None, type=int,
+    help="Number of debate rounds (default: 5, or the format's own). Minimum 3 recommended for full phase coverage.",
 )
 @click.option(
     "--preset", default=None,
     help="Use a built-in persona preset (e.g. investment_styles). Run 'agora presets' to list all.",
+)
+@click.option(
+    "--format", "format_id", default=None,
+    help="Run an institutional format with fixed roles, phases and output (e.g. committee). Run 'agora formats' to list all.",
 )
 @click.option(
     "--provider", default="anthropic",
@@ -88,8 +92,9 @@ def cli():
 def run(
     topic: str,
     agents: str,
-    rounds: int,
+    rounds: Optional[int],
     preset: Optional[str],
+    format_id: Optional[str],
     provider: str,
     model: Optional[str],
     output: str,
@@ -118,6 +123,27 @@ def run(
         console.print("Install it with: pip install <package>")
         sys.exit(1)
 
+    debate_format = None
+    if format_id:
+        if preset:
+            console.print("[bold red]Error:[/bold red] use either --format or --preset, not both.")
+            sys.exit(1)
+        from agora.formats import FormatError, load_format
+        try:
+            debate_format = load_format(format_id)
+        except (FileNotFoundError, FormatError) as exc:
+            console.print(f"[bold red]Error:[/bold red] {exc}")
+            sys.exit(1)
+        if rounds is not None and rounds != len(debate_format["phases"]):
+            console.print(
+                f"[bold red]Error:[/bold red] the {format_id} format has "
+                f"{len(debate_format['phases'])} rounds; leave out --rounds."
+            )
+            sys.exit(1)
+        rounds = len(debate_format["phases"])
+    elif rounds is None:
+        rounds = 5
+
     if rounds > 12:
         console.print(
             f"[bold yellow]Warning:[/bold yellow] {rounds} rounds will make this "
@@ -131,7 +157,9 @@ def run(
         sys.exit(1)
 
     # ── Resolve agent configs ────────────────────────────────────────────
-    if preset:
+    if debate_format:
+        agent_configs = debate_format["agents"]
+    elif preset:
         try:
             data = load_preset(preset)
         except FileNotFoundError as exc:
@@ -169,6 +197,7 @@ def run(
         dynamic=dynamic,
         convergence_threshold=convergence,
         moderator_interventions=not no_interventions,
+        debate_format=debate_format,
     )
 
 
@@ -207,6 +236,22 @@ def list_presets_cmd() -> None:
         agents_str = ", ".join(a["name"] for a in data.get("agents", []))
         console.print(f"  [cyan bold]{name}[/cyan bold] — {data.get('name', name)}")
         console.print(f"  [dim]  {agents_str}[/dim]")
+        console.print()
+
+
+@cli.command(name="formats")
+def list_formats_cmd() -> None:
+    """List the built-in debate formats with their roles and rounds."""
+    from agora.formats import list_formats, load_format
+
+    console.print("[bold]Available formats:[/bold]")
+    console.print()
+    for fmt_id in list_formats():
+        fmt = load_format(fmt_id)
+        roles = ", ".join(a["name"] for a in fmt["agents"])
+        console.print(f"  [cyan bold]{fmt_id}[/cyan bold] — {fmt['name']} ({len(fmt['phases'])} rounds)")
+        console.print(f"  [dim]  {fmt['description']}[/dim]")
+        console.print(f"  [dim]  {roles}[/dim]")
         console.print()
 
 

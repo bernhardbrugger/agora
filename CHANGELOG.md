@@ -7,6 +7,10 @@ reconstructed from the git history.
 ## [Unreleased]
 
 ### Added
+- Debate formats: `agora run --format committee` runs an investment committee (bull, bear, risk officer, quant,
+  devil's advocate; 4 fixed phases) whose moderator writes a decision memo that keeps the dissent, with a
+  "not investment advice" disclaimer in the terminal and the report. `agora formats` lists them; the YAML spec is
+  in `agora/formats/__init__.py`, and formats ship inside the package.
 - `agora replay TRANSCRIPT.json [-o page.html]`: one self-contained HTML page with a position grid
   (for/against per agent and round, linked to the speech), the consensus per round, every speech, the
   moderator's interventions and the synthesis. It loads nothing from the network and escapes all model text.

@@ -260,6 +260,36 @@ agora presets
 
 ---
 
+## 🏛️ Formats
+
+A preset only chooses the speakers. A **format** is a whole institution: fixed roles, a fixed sequence of phases,
+rules every speaker gets, a disclaimer shown in the terminal and at the top of the report, and the shape of the final
+output. It is a YAML file in `agora/formats/` (the spec is at the top of `agora/formats/__init__.py`).
+
+| Format | Roles | Rounds | Final output |
+|--------|-------|--------|--------------|
+| `committee` | The Bull, The Bear, The Risk Officer, The Quant, The Devil's Advocate | 4 (opening, rebuttal, cross-examination, closing) | The chair's decision memo: thesis, strongest case for and counter, risks, **dissent kept by name**, what would change our minds, unverified claims, an assessment of how the thesis held up |
+
+```bash
+agora formats
+agora run --format committee --topic "Is a broad index fund overvalued after a strong decade?"
+```
+
+```text
+Available formats:
+
+  committee — Investment Committee (4 rounds)
+    Bull, bear, risk officer, quant and devil's advocate test a thesis; the
+chair writes a decision memo that keeps the dissent.
+    The Bull, The Bear, The Risk Officer, The Quant, The Devil's Advocate
+```
+
+The committee is an educational exercise: every speaker is told never to recommend buying, selling, holding or
+sizing a position, and the memo assesses the argument, not a trade. It is not investment advice. `--format` cannot be
+combined with `--preset`, and the format fixes the number of rounds.
+
+---
+
 ## Custom Personas
 
 Create your own panel with a YAML file:

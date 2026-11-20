@@ -85,10 +85,13 @@ class Moderator:
         history: list[dict],
         agent_names: list[str],
         consensus_scores: list[float],
+        instructions: Optional[str] = None,
     ) -> str:
         """
         Produce a comprehensive, opinionated synthesis of the full debate including
         resolution, unresolved cruxes, and actionable recommendations.
+
+        ``instructions`` (a debate format's ``synthesis``) replaces the default outline.
         """
         transcript = format_history(history)
         trend = " → ".join(f"{s:.0%}" for s in consensus_scores)
@@ -106,6 +109,12 @@ class Moderator:
             f"Participants: {', '.join(agent_names)}\n"
             f"Consensus trend across rounds: {trend}\n\n"
             f"Full debate transcript:\n{transcript}\n\n"
+        )
+        if instructions:
+            user += f"━━ PRODUCE YOUR SYNTHESIS IN EXACTLY THIS FORMAT ━━\n\n{instructions}"
+            return self.provider.complete(system, [{"role": "user", "content": user}], max_tokens=3000)
+
+        user += (
             f"━━ PRODUCE YOUR SYNTHESIS IN EXACTLY THIS FORMAT ━━\n\n"
             f"## The Real Crux\n"
             f"(2–3 sentences: What is the FUNDAMENTAL disagreement? Not surface-level — "

@@ -46,7 +46,13 @@ class DryRunProvider(LLMProvider):
                 f'and say what that means for "{topic}".'
             )
         if system.startswith("You are a world-class debate analyst"):
-            return _SYNTHESIS.format(topic=topic)
+            outline = user.split("EXACTLY THIS FORMAT", 1)[-1]
+            if "## The Real Crux" in outline:
+                return _SYNTHESIS.format(topic=topic)
+            # a debate format's own outline (e.g. the committee memo): same headings, placeholder text
+            headings = re.findall(r"^## (.+)$", outline, re.M)
+            body = "\n\n".join(f"## {h.strip()}\nPlaceholder." for h in headings)
+            return f'[dry run] Canned synthesis for "{topic}"; no model was called.\n\n{body}'
 
         name_match = _NAME_RE.search(system)
         phase_match = _PHASE_RE.search(system)
