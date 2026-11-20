@@ -232,7 +232,8 @@ The final synthesis covers eight structured sections:
 
 ### Scorecard
 
-The report ends with a scorecard computed from the transcript, with no model involved, so it costs nothing and is the
+The report ends with a scorecard (the replay page shows it too, above the speeches), computed from the transcript with no
+model involved, so it costs nothing and is the
 same for every provider. It scores the debate, not the truth of the topic. Output of a 3-round `--dry-run` (the
 canned speakers repeat their placeholder sentence, which the scorecard counts):
 
@@ -378,8 +379,8 @@ agora run --topic "Topic" --preset neutral --provider openai --model gpt4o-mini
 # Save reports to a custom directory. Each run writes debate_<topic>_<time>.md and, with the same name,
 # a .json transcript (rounds, phases, scores, moderator, synthesis; schema: docs/transcript.schema.json)
 
-# Turn a transcript into one self-contained HTML page (positions per round, consensus, every speech,
-# the synthesis; loads nothing from the network, so it can be shared as a file)
+# Turn a transcript into one self-contained HTML page (positions per round, consensus, the scorecard,
+# every speech, the synthesis; loads nothing from the network, so it can be shared as a file)
 agora replay ./my_reports/debate_topic_20261119_155605.json            # writes the .html next to it
 agora run --topic "Topic" --preset neutral --replay                    # or write it right after the debate
 agora run --topic "Topic" --preset neutral --output ./my_reports

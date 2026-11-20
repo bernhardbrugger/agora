@@ -42,8 +42,9 @@ def test_model_text_is_escaped_everywhere():
     assert "<script" not in page.lower()
     assert "<img" not in page.lower()
     # topic (title, h1) 2 + agent name (meta line, table, 2 turns) 4 + speech (body and its POSITION: line) 2
-    # + position (cell title, aria-label, turn) 3 + moderator 1 + synthesis 1: every copy escaped, none lost
-    assert page.count("&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;") == 13
+    # + position (cell title, aria-label, turn) 3 + moderator 1 + synthesis 1 + scorecard row 1:
+    # every copy escaped, none lost
+    assert page.count("&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;") == 14
 
 
 def test_nothing_is_loaded_from_outside():
@@ -165,3 +166,26 @@ def test_run_without_replay_writes_no_page(tmp_path, _offline):
     )
     assert result.exit_code == 0, result.output
     assert not list(tmp_path.glob("*.html"))
+
+
+def test_scorecard_matches_the_report_numbers():
+    page = render_replay(_transcript())
+    section = page.split("<h2>Scorecard</h2>", 1)[1].split("<section", 1)[0]
+    rows = re.findall(r"<tr><td>(.*?)</td><td>(.*?)</td><td>(\d+)</td><td>(.*?)</td><td>(\d+)</td></tr>", section)
+    assert [(name.startswith("Ada"), stances, shifts, moved) for name, stances, shifts, moved, _ in rows] == [
+        (True, "for → -", "0", "no"),                     # one stated stance: never "moved"
+        (False, "against → for", "1", "yes (against → for)"),
+    ]
+    assert "Changed position: Bo." in section
+    assert "Repeated arguments: 0 sentence(s)" in section
+
+
+def test_scorecard_counts_repeats_and_names_nobody_when_nobody_moved():
+    same = "Cars make every street louder and more dangerous for the children who walk there."
+    t = _transcript(history=[
+        {"round": 1, "phase": "opening", "agent": "Bo", "text": f"{same}\nPOSITION: I oppose it."},
+        {"round": 2, "phase": "closing", "agent": "Bo", "text": f"{same}\nPOSITION: I oppose it."},
+    ], agent_configs=[{"name": "Bo"}], consensus_scores=[0.5, 0.5], interventions={})
+    section = render_replay(t).split("<h2>Scorecard</h2>", 1)[1]
+    assert "Changed position: nobody." in section
+    assert "Repeated arguments: 1 sentence(s)" in section

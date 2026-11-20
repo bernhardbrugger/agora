@@ -9,7 +9,8 @@ reconstructed from the git history.
 ### Added
 - A scorecard at the end of every report, computed from the transcript without a model: each speaker's stance by
   round, how often it shifted, who changed position from opening to closing, and how many sentences restated the
-  speaker's own earlier sentence. It scores the debate, not the truth of the topic.
+  speaker's own earlier sentence. It scores the debate, not the truth of the topic. The replay page shows the
+  same scorecard, derived from the transcript (so older transcripts get it too).
 - Debate formats: `agora run --format committee` runs an investment committee (bull, bear, risk officer, quant,
   devil's advocate; 4 fixed phases) whose moderator writes a decision memo that keeps the dissent, with a
   "not investment advice" disclaimer in the terminal and the report. `agora formats` lists them; the YAML spec is
