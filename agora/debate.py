@@ -11,6 +11,7 @@ from agora.agent import Agent, PHASE_LABELS
 from agora.moderator import Moderator
 from agora.providers.base import LLMProvider
 from agora import renderer
+from agora.scorecard import build_scorecard, scorecard_markdown
 from agora.transcript import build_transcript, save_transcript
 
 
@@ -240,16 +241,17 @@ def run_debate(
     )
     renderer.print_moderator_synthesis(synthesis)
 
+    transcript = build_transcript(
+        topic, agent_configs, rounds, provider_label,
+        history, synthesis, consensus_scores, interventions,
+        debate_format=debate_format,
+    )
     report_path = _save_report(
         topic, agent_configs, effective_rounds, provider_label,
         history, synthesis, consensus_scores, output_dir,
         format_name=debate_format["name"] if debate_format else None,
         disclaimer=disclaimer,
-    )
-    transcript = build_transcript(
-        topic, agent_configs, rounds, provider_label,
-        history, synthesis, consensus_scores, interventions,
-        debate_format=debate_format,
+        scorecard=scorecard_markdown(build_scorecard(transcript)),
     )
     transcript_path = save_transcript(Path(report_path).with_suffix(".json"), transcript)
     renderer.print_saved(report_path)
@@ -272,8 +274,9 @@ def _save_report(
     output_dir: str,
     format_name: Optional[str] = None,
     disclaimer: Optional[str] = None,
+    scorecard: Optional[str] = None,
 ) -> str:
-    """Serialise the full debate as a Markdown report."""
+    """Serialise the full debate as a Markdown report (the scorecard section goes last)."""
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
 
@@ -328,6 +331,8 @@ def _save_report(
         synthesis,
         "",
     ]
+    if scorecard:
+        lines += ["---", "", scorecard, ""]
 
     path.write_text("\n".join(lines), encoding="utf-8")
     return str(path)

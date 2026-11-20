@@ -230,6 +230,28 @@ The final synthesis covers eight structured sections:
 | **Final Recommendation** | A concrete, specific answer — not a hedge |
 | **Confidence Score** | 0–100 with one-sentence justification |
 
+### Scorecard
+
+The report ends with a scorecard computed from the transcript, with no model involved, so it costs nothing and is the
+same for every provider. It scores the debate, not the truth of the topic. Output of a 3-round `--dry-run` (the
+canned speakers repeat their placeholder sentence, which the scorecard counts):
+
+```text
+| Agent | Stance by round | Shifts | Moved | Repeats |
+|-------|-----------------|--------|-------|---------|
+| The Analyst | for → for → for | 0 | no | 2 |
+| The Pragmatist | against → against → for | 1 | yes (against → for) | 2 |
+| The Devil's Advocate | for → for → for | 0 | no | 2 |
+
+**Changed position:** The Pragmatist.
+
+**Repeated arguments:** 6 sentence(s) restated a speaker's own earlier sentence (at least 80% the same words).
+```
+
+The stance comes from each turn's `POSITION:` line (`-` when it is missing; that round is not counted as a change of
+mind). A repeat is a sentence of 8 or more words that shares at least 80% of its words with one of the same speaker's
+earlier sentences.
+
 ---
 
 ## 📋 Presets
@@ -378,6 +400,7 @@ Agora is a small hobby project. Know what you are getting:
 - **Tests cover the logic, not the models.** CI runs `pytest` on Linux and Windows (Python 3.9 and 3.13): phases, consensus scoring, presets, reports and the `run` command end to end through `--dry-run`. No test calls a real provider, so the provider code (API calls, retries, model IDs) is only checked by running debates by hand.
 - **Install from source only.** It is not on PyPI. Presets are read from the repo's `personas/` folder, so use the editable install (`pip install -e .`) shown above.
 - **Model aliases are pinned to 2025 model IDs** (for example `sonnet` → `claude-sonnet-4-20250514`, `flash` → `gemini-2.0-flash`). Providers retire models; if an alias fails, pass a current full model ID with `--model`. Gemini support uses the older `google-generativeai` SDK.
+- **The scorecard reads words, not meaning.** A stance comes from simple word matching on the `POSITION:` line, and a repeat is word overlap, so a paraphrased argument is not caught. Steelman checks and unresolved cruxes are not scored yet.
 - **The consensus meter is a rough heuristic.** It combines keyword overlap with simple word matching on each agent's `POSITION:` line. It does not understand meaning and can misread negations.
 - **Every agent is the same underlying model** playing a role. Debates can converge because of that, not because an argument won.
 - **Personas are archetypes, not real people.** The presets describe styles of thinking (for example the value investor or the crisis leader). They deliberately do not name or imitate real people, living or dead; before 2026-11-16 four presets did, and they were replaced for that reason. Your own presets should follow the same rule.
