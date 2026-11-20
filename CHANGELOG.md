@@ -10,7 +10,8 @@ reconstructed from the git history.
 - Debate formats: `agora run --format committee` runs an investment committee (bull, bear, risk officer, quant,
   devil's advocate; 4 fixed phases) whose moderator writes a decision memo that keeps the dissent, with a
   "not investment advice" disclaimer in the terminal and the report. `agora formats` lists them; the YAML spec is
-  in `agora/formats/__init__.py`, and formats ship inside the package.
+  in `agora/formats/__init__.py`, and formats ship inside the package. The transcript records the format
+  (optional `format` field) and the replay page shows its name and disclaimer.
 - `agora run --format court`: an educational moot court (prosecution, defence, neutral expert, juror) whose
   judge writes a judgment with the burden of proof applied, a verdict and the minority opinion; "not legal
   advice", fictional or historic public cases only.

@@ -130,3 +130,15 @@ def test_cli_reports_a_file_that_is_not_a_transcript(tmp_path):
     text = " ".join(result.output.split())  # rich wraps long lines at the terminal width
     assert "not an agora transcript" in text
     assert text.count("bad.json") == 1
+
+
+def test_format_name_and_disclaimer_are_shown_escaped():
+    fmt = {"id": "x", "name": f"Court {EVIL}", "disclaimer": f"Not legal advice. {EVIL}"}
+    html = render_replay(_transcript(debate_format=fmt))
+    assert "<script" not in html and "<img" not in html
+    assert "Format: Court &lt;script&gt;" in html
+    assert html.count("<strong>Disclaimer:</strong> Not legal advice. &lt;script&gt;") == 2  # top and bottom
+
+
+def test_no_format_disclaimer_without_a_format():
+    assert "<strong>Disclaimer:</strong>" not in render_replay(_transcript())

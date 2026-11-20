@@ -106,3 +106,26 @@ def test_run_writes_a_valid_transcript_next_to_the_report(tmp_path, _offline):
     assert all(turn["text"] in md for r in t["rounds"] for turn in r["turns"])
     assert t["synthesis"] in md
     assert any(r["moderator"] for r in t["rounds"][1:])
+
+
+def test_format_is_recorded_and_valid():
+    from agora.formats import load_format
+
+    fmt = load_format("committee")
+    t = _transcript(debate_format=fmt)
+    assert t["format"] == {"id": "committee", "name": "Investment Committee", "disclaimer": fmt["disclaimer"]}
+    jsonschema.validate(t, SCHEMA)
+    assert "format" not in _transcript()
+
+
+def test_committee_run_writes_the_format_into_the_transcript(tmp_path, monkeypatch):
+    for key in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GOOGLE_API_KEY", "XAI_API_KEY"):
+        monkeypatch.delenv(key, raising=False)
+    monkeypatch.setattr("agora.cli.load_dotenv", lambda *a, **k: None)
+    result = CliRunner().invoke(
+        cli, ["run", "--dry-run", "--format", "committee", "--topic", "t", "--no-stream", "--output", str(tmp_path)],
+    )
+    assert result.exit_code == 0, result.output
+    t = json.loads(next(tmp_path.glob("debate_*.json")).read_text(encoding="utf-8"))
+    jsonschema.validate(t, SCHEMA)
+    assert t["format"]["id"] == "committee"

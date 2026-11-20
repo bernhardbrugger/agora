@@ -54,6 +54,17 @@
         }
       }
     },
-    "synthesis": { "type": "string", "description": "The moderator's final synthesis." }
+    "synthesis": { "type": "string", "description": "The moderator's final synthesis." },
+    "format": {
+      "type": "object",
+      "description": "Present only when the debate ran with --format: the format that fixed roles, phases and the synthesis outline.",
+      "additionalProperties": false,
+      "required": ["id", "name", "disclaimer"],
+      "properties": {
+        "id": { "type": "string", "description": "e.g. committee or court" },
+        "name": { "type": "string" },
+        "disclaimer": { "type": "string", "description": "Shown before the debate, in the report and on the replay page." }
+      }
+    }
   }
 }

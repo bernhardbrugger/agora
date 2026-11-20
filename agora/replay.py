@@ -89,6 +89,10 @@ def render_replay(t: dict) -> str:
         f'<p class="meta">{e(t["created"])} · {e(t["provider"])} · '
         f"{len(rounds)} of {int(t['planned_rounds'])} planned rounds · {e(', '.join(agents))}</p>"
     )
+    fmt = t.get("format")
+    if fmt:
+        add(f'<p class="meta">Format: {e(fmt["name"])}</p>')
+        add(f'<p class="note"><strong>Disclaimer:</strong> {e(fmt["disclaimer"])}</p>')
     add(f'<p class="note">{e(DISCLAIMER)}</p>')
     add("</header>")
 
@@ -146,6 +150,8 @@ def render_replay(t: dict) -> str:
 
     add('<section id="synthesis"><h2>Moderator synthesis</h2>')
     add(f'<div class="turn"><div class="text">{e(t["synthesis"])}</div></div></section>')
+    if fmt:
+        add(f'<p class="note"><strong>Disclaimer:</strong> {e(fmt["disclaimer"])}</p>')
     add(f'<p class="note">{e(DISCLAIMER)}</p>')
     add("</main></body></html>")
     return "\n".join(out) + "\n"

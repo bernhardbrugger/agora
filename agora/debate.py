@@ -249,6 +249,7 @@ def run_debate(
     transcript = build_transcript(
         topic, agent_configs, rounds, provider_label,
         history, synthesis, consensus_scores, interventions,
+        debate_format=debate_format,
     )
     transcript_path = save_transcript(Path(report_path).with_suffix(".json"), transcript)
     renderer.print_saved(report_path)

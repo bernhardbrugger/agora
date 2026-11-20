@@ -29,8 +29,12 @@ def build_transcript(
     consensus_scores: list[float],
     interventions: Optional[dict[int, str]] = None,
     created: Optional[datetime] = None,
+    debate_format: Optional[dict] = None,
 ) -> dict:
-    """Return the whole debate as a JSON-ready dict (schema version 1)."""
+    """Return the whole debate as a JSON-ready dict (schema version 1).
+
+    With a debate format, the optional ``format`` field records its id, name and disclaimer.
+    """
     from agora.debate import position_polarity  # avoid an import cycle
 
     interventions = interventions or {}
@@ -54,7 +58,7 @@ def build_transcript(
             "polarity": position_polarity(entry["text"]),
         })
 
-    return {
+    transcript = {
         "schema": SCHEMA_ID,
         "schema_version": SCHEMA_VERSION,
         "topic": topic,
@@ -65,6 +69,13 @@ def build_transcript(
         "rounds": rounds,
         "synthesis": synthesis,
     }
+    if debate_format:
+        transcript["format"] = {
+            "id": debate_format["id"],
+            "name": debate_format["name"],
+            "disclaimer": debate_format["disclaimer"],
+        }
+    return transcript
 
 
 def save_transcript(path: str | Path, transcript: dict) -> str:
