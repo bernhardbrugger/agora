@@ -86,6 +86,10 @@ def cli():
     help="Disable moderator interventions between rounds.",
 )
 @click.option(
+    "--replay", "make_replay", is_flag=True, default=False,
+    help="Also write the HTML replay page next to the report (same as running 'agora replay' on the transcript).",
+)
+@click.option(
     "--dry-run", "dry_run", is_flag=True, default=False,
     help="Use canned offline replies instead of a model: no API key, no cost. Shows the flow, not a debate.",
 )
@@ -102,6 +106,7 @@ def run(
     dynamic: bool,
     convergence: float,
     no_interventions: bool,
+    make_replay: bool,
     dry_run: bool,
 ) -> None:
     """Run a structured multi-agent debate on any topic."""
@@ -186,7 +191,7 @@ def run(
                     sys.exit(0)
             agent_configs = parsed
 
-    run_debate(
+    report_path = run_debate(
         topic=topic,
         agent_configs=agent_configs,
         rounds=rounds,
@@ -199,6 +204,13 @@ def run(
         moderator_interventions=not no_interventions,
         debate_format=debate_format,
     )
+    if make_replay:
+        from pathlib import Path
+
+        from agora.replay import write_replay
+
+        page = write_replay(Path(report_path).with_suffix(".json"))
+        console.print(f"  [bold green]✓[/bold green] Replay saved: [underline]{page}[/underline]")
 
 
 @cli.command(name="replay")

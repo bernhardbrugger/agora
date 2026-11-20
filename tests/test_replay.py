@@ -142,3 +142,26 @@ def test_format_name_and_disclaimer_are_shown_escaped():
 
 def test_no_format_disclaimer_without_a_format():
     assert "<strong>Disclaimer:</strong>" not in render_replay(_transcript())
+
+
+def test_run_with_replay_writes_the_page_next_to_the_report(tmp_path, _offline):
+    result = CliRunner().invoke(
+        cli,
+        ["run", "--dry-run", "--format", "committee", "--topic", "Index funds?", "--no-stream",
+         "--replay", "--output", str(tmp_path)],
+    )
+    assert result.exit_code == 0, result.output
+    report = next(tmp_path.glob("debate_*.md"))
+    page = report.with_suffix(".html")
+    assert page.is_file()
+    html = page.read_text(encoding="utf-8")
+    assert "<h1>Index funds?</h1>" in html and "Format: Investment Committee" in html
+    assert "Replay saved" in " ".join(result.output.split())
+
+
+def test_run_without_replay_writes_no_page(tmp_path, _offline):
+    result = CliRunner().invoke(
+        cli, ["run", "--dry-run", "--topic", "x", "--agents", "2", "--rounds", "2", "--no-stream", "--output", str(tmp_path)],
+    )
+    assert result.exit_code == 0, result.output
+    assert not list(tmp_path.glob("*.html"))

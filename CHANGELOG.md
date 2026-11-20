@@ -15,6 +15,7 @@ reconstructed from the git history.
 - `agora run --format court`: an educational moot court (prosecution, defence, neutral expert, juror) whose
   judge writes a judgment with the burden of proof applied, a verdict and the minority opinion; "not legal
   advice", fictional or historic public cases only.
+- `agora run --replay` writes the HTML replay page right after the debate, next to the report.
 - `agora replay TRANSCRIPT.json [-o page.html]`: one self-contained HTML page with a position grid
   (for/against per agent and round, linked to the speech), the consensus per round, every speech, the
   moderator's interventions and the synthesis. It loads nothing from the network and escapes all model text.

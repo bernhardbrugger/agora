@@ -349,6 +349,7 @@ agora run --topic "Topic" --preset neutral --provider openai --model gpt4o-mini
 # Turn a transcript into one self-contained HTML page (positions per round, consensus, every speech,
 # the synthesis; loads nothing from the network, so it can be shared as a file)
 agora replay ./my_reports/debate_topic_20261119_155605.json            # writes the .html next to it
+agora run --topic "Topic" --preset neutral --replay                    # or write it right after the debate
 agora run --topic "Topic" --preset neutral --output ./my_reports
 
 # Use custom agent names (each gets a generic analytical persona)
