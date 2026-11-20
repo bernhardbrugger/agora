@@ -269,10 +269,12 @@ output. It is a YAML file in `agora/formats/` (the spec is at the top of `agora/
 | Format | Roles | Rounds | Final output |
 |--------|-------|--------|--------------|
 | `committee` | The Bull, The Bear, The Risk Officer, The Quant, The Devil's Advocate | 4 (opening, rebuttal, cross-examination, closing) | The chair's decision memo: thesis, strongest case for and counter, risks, **dissent kept by name**, what would change our minds, unverified claims, an assessment of how the thesis held up |
+| `court` | The Prosecution, The Defence, The Expert Witness, The Juror | 4 (same phases) | The judge's judgment: the question and its elements, burden and standard of proof, findings per disputed issue, verdict, **minority opinion**, what would have changed the outcome, assumed facts and unverified law |
 
 ```bash
 agora formats
 agora run --format committee --topic "Is a broad index fund overvalued after a strong decade?"
+agora run --format court --topic "Did the fictional baker breach the contract by delivering the wedding cake a day late?"
 ```
 
 ```text
@@ -282,10 +284,19 @@ Available formats:
     Bull, bear, risk officer, quant and devil's advocate test a thesis; the
 chair writes a decision memo that keeps the dissent.
     The Bull, The Bear, The Risk Officer, The Quant, The Devil's Advocate
+
+  court — Moot Court (4 rounds)
+    Prosecution, defence, a neutral expert and a juror argue a case; the judge
+writes a verdict that applies the burden of proof and keeps the minority
+opinion.
+    The Prosecution, The Defence, The Expert Witness, The Juror
 ```
 
 The committee is an educational exercise: every speaker is told never to recommend buying, selling, holding or
-sizing a position, and the memo assesses the argument, not a trade. It is not investment advice. `--format` cannot be
+sizing a position, and the memo assesses the argument, not a trade. It is not investment advice. The court is a moot court
+for learning how arguments meet a burden of proof: use fictional or historic public cases, never real ongoing cases or
+private persons; agents are told to mark assumed facts and not to present laws they are unsure of as real. It is not
+legal advice. `--format` cannot be
 combined with `--preset`, and the format fixes the number of rounds.
 
 ---

@@ -22,7 +22,7 @@ than 3.9. On Windows, set `PYTHONIOENCODING=utf-8` when piping the output.
 |---|---|
 | `agora/cli.py` | Click commands `run`, `replay`, `presets`, `formats`, `providers` |
 | `agora/debate.py` | rounds, phases, consensus score, dynamic termination |
-| `agora/formats/` | debate formats (`committee.yaml`) and their loader; the YAML spec is in the module docstring |
+| `agora/formats/` | debate formats (`committee.yaml`, `court.yaml`) and their loader; the YAML spec is in the module docstring |
 | `agora/moderator.py` | moderator interventions (a bare `NONE` reply means "no intervention") |
 | `agora/providers/` | Anthropic, OpenAI, Gemini, Grok and the offline `dryrun` provider |
 | `agora/renderer.py` | terminal output and the Markdown report |

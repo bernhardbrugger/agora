@@ -55,6 +55,28 @@ def test_committee_has_its_roles_disclaimer_and_memo():
         assert "Never recommend buying, selling, holding" in agent["role"]
 
 
+def test_court_has_its_roles_disclaimer_and_judgment():
+    fmt = load_format("court")
+    assert [a["name"] for a in fmt["agents"]] == [
+        "The Prosecution", "The Defence", "The Expert Witness", "The Juror",
+    ]
+    assert "Not legal advice" in fmt["disclaimer"]
+    assert "never real ongoing cases or private persons" in fmt["disclaimer"]
+    for heading in ("## Burden and Standard of Proof", "## Verdict", "## Minority Opinion"):
+        assert heading in fmt["synthesis"]
+    for agent in fmt["agents"]:
+        assert "invent no facts about real people" in agent["role"]
+
+
+def test_court_dry_run_writes_the_judgment(tmp_path):
+    result = _run(tmp_path, "--format", "court", "--topic", "Did the fictional baker breach the contract?")
+    assert result.exit_code == 0, result.output
+    report = next(tmp_path.glob("debate_*.md")).read_text(encoding="utf-8")
+    assert "**Format:** Moot Court" in report
+    assert "> **Disclaimer:** Educational moot court" in report
+    assert "## Minority Opinion\nPlaceholder." in report
+
+
 def test_rules_are_appended_and_colours_assigned():
     fmt = validate_format(_spec(rules="No names."), "t")
     assert fmt["agents"][0]["role"] == "ra\n\nRules of this format: No names."
