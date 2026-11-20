@@ -77,6 +77,28 @@ def test_court_dry_run_writes_the_judgment(tmp_path):
     assert "## Minority Opinion\nPlaceholder." in report
 
 
+def test_redteam_has_its_roles_disclaimer_and_report():
+    fmt = load_format("redteam")
+    assert [a["name"] for a in fmt["agents"]] == [
+        "The Plan Owner", "The Red Team Lead", "The Pre-Mortem Analyst", "The Mitigation Engineer",
+    ]
+    assert "no exploit code, attack instructions or targeting of real systems" in fmt["disclaimer"]
+    for heading in ("## Top Risks", "## Mitigations", "## What Survived", "## Tripwires"):
+        assert heading in fmt["synthesis"]
+    for agent in fmt["agents"]:
+        assert "never write exploit code" in agent["role"]
+        assert "Critique the plan, never the people behind it" in agent["role"]
+
+
+def test_redteam_dry_run_writes_the_report(tmp_path):
+    result = _run(tmp_path, "--format", "redteam", "--topic", "Should we keep all nightly backups in one cloud region?")
+    assert result.exit_code == 0, result.output
+    report = next(tmp_path.glob("debate_*.md")).read_text(encoding="utf-8")
+    assert "**Format:** Red Team Review" in report
+    assert "> **Disclaimer:** Educational red-team review" in report
+    assert "## What Survived\nPlaceholder." in report
+
+
 def test_rules_are_appended_and_colours_assigned():
     fmt = validate_format(_spec(rules="No names."), "t")
     assert fmt["agents"][0]["role"] == "ra\n\nRules of this format: No names."

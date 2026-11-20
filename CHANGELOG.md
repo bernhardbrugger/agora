@@ -15,6 +15,9 @@ reconstructed from the git history.
 - `agora run --format court`: an educational moot court (prosecution, defence, neutral expert, juror) whose
   judge writes a judgment with the burden of proof applied, a verdict and the minority opinion; "not legal
   advice", fictional or historic public cases only.
+- `agora run --format redteam`: a red-team review (plan owner, red team lead, pre-mortem analyst, mitigation
+  engineer) whose report ranks the risks, lists mitigations with their remaining risk, keeps what survived and
+  names tripwires; it critiques ideas, not people, and stays at design level (no exploit code or attack steps).
 - `agora run --replay` writes the HTML replay page right after the debate, next to the report.
 - `agora replay TRANSCRIPT.json [-o page.html]`: one self-contained HTML page with a position grid
   (for/against per agent and round, linked to the speech), the consensus per round, every speech, the

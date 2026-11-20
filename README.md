@@ -270,11 +270,13 @@ output. It is a YAML file in `agora/formats/` (the spec is at the top of `agora/
 |--------|-------|--------|--------------|
 | `committee` | The Bull, The Bear, The Risk Officer, The Quant, The Devil's Advocate | 4 (opening, rebuttal, cross-examination, closing) | The chair's decision memo: thesis, strongest case for and counter, risks, **dissent kept by name**, what would change our minds, unverified claims, an assessment of how the thesis held up |
 | `court` | The Prosecution, The Defence, The Expert Witness, The Juror | 4 (same phases) | The judge's judgment: the question and its elements, burden and standard of proof, findings per disputed issue, verdict, **minority opinion**, what would have changed the outcome, assumed facts and unverified law |
+| `redteam` | The Plan Owner, The Red Team Lead, The Pre-Mortem Analyst, The Mitigation Engineer | 4 (same phases) | The red-team report: the plan and its assumptions, top risks ranked (stated fact or speculation), assumptions that did not hold, mitigations with cost and remaining risk, **what survived**, tripwires, unverified claims |
 
 ```bash
 agora formats
 agora run --format committee --topic "Is a broad index fund overvalued after a strong decade?"
 agora run --format court --topic "Did the fictional baker breach the contract by delivering the wedding cake a day late?"
+agora run --format redteam --topic "Should we keep all nightly backups in one cloud region?"
 ```
 
 ```text
@@ -290,14 +292,22 @@ chair writes a decision memo that keeps the dissent.
 writes a verdict that applies the burden of proof and keeps the minority
 opinion.
     The Prosecution, The Defence, The Expert Witness, The Juror
+
+  redteam — Red Team Review (4 rounds)
+    A plan's owner defends it while a red team, a pre-mortem analyst and a
+mitigation engineer try to break it; the report ranks the risks and says what
+survived.
+    The Plan Owner, The Red Team Lead, The Pre-Mortem Analyst, The Mitigation
+Engineer
 ```
 
 The committee is an educational exercise: every speaker is told never to recommend buying, selling, holding or
 sizing a position, and the memo assesses the argument, not a trade. It is not investment advice. The court is a moot court
 for learning how arguments meet a burden of proof: use fictional or historic public cases, never real ongoing cases or
 private persons; agents are told to mark assumed facts and not to present laws they are unsure of as real. It is not
-legal advice. `--format` cannot be
-combined with `--preset`, and the format fixes the number of rounds.
+legal advice. The red-team review attacks a plan, product or decision before reality does: it critiques ideas, not
+people, and stays at design level (agents are told never to write exploit code or attack instructions, or to aim at a
+real system or person). `--format` cannot be combined with `--preset`, and the format fixes the number of rounds.
 
 ---
 
