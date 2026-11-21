@@ -27,7 +27,7 @@ than 3.9. On Windows, set `PYTHONIOENCODING=utf-8` when piping the output.
 | `agora/providers/` | Anthropic, OpenAI, Gemini, Grok and the offline `dryrun` provider |
 | `agora/renderer.py` | terminal output and the Markdown report |
 | `agora/replay.py` | `agora replay`: transcript -> one static HTML page; every string escaped (model output is untrusted), a CSP that blocks all network loads, no external scripts, fonts or images |
-| `agora/scorecard.py` | the scorecard of the report and the replay page (stance shifts, repeated sentences), computed from the transcript without a model |
+| `agora/scorecard.py` | the scorecard of the report and the replay page (stance shifts, repeated sentences; the report also lists cited sources and unsupported claims), computed from the transcript without a model |
 | `agora/transcript.py` | the JSON transcript written next to the report; schema in `docs/transcript.schema.json` (change both together, raise `schema_version` when a reader would break) |
 | `personas/*.yaml` | presets: a panel name and 2-5 agents with a role description |
 | `tests/` | pytest; providers are tested against fake SDK modules |

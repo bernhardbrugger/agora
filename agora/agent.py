@@ -133,6 +133,9 @@ class Agent:
             f"worldview, values, and epistemic standards.\n"
             f"• Reference other debaters by name. Quote or paraphrase what they actually said.\n"
             f"• Never dodge a strong opposing argument. Engage with it or concede the point.\n"
+            f"• Back every figure, study or statistic with an inline citation in the form "
+            f"[source: <publication, organisation or URL>]. If you cannot name one, say it is "
+            f"your own estimate. Never invent a source.\n"
             f"• End every response with a single sentence starting with 'POSITION: ' that "
             f"states your current stance (e.g. 'POSITION: I strongly support X because Y.')."
         )

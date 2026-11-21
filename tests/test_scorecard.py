@@ -6,7 +6,7 @@ import pytest
 from click.testing import CliRunner
 
 from agora.cli import cli
-from agora.scorecard import build_scorecard, scorecard_markdown, stance
+from agora.scorecard import build_scorecard, scorecard_markdown, sources, stance, unsupported
 
 LONG = "Rates matter more than earnings for long duration assets in every cycle we have seen."
 
@@ -76,15 +76,80 @@ def test_markdown_names_who_moved_and_says_what_it_scores():
     md = scorecard_markdown(build_scorecard(_transcript()))
     assert md.startswith("## Scorecard")
     assert "It scores the debate, not the truth of the topic." in md
-    assert "| Ana | for → against → against | 1 | yes (for → against) | 1 |" in md
-    assert "| Ben | against → - → against | 0 | no | 0 |" in md
+    assert "| Ana | for → against → against | 1 | yes (for → against) | 1 | 0 | 0 |" in md
+    assert "| Ben | against → - → against | 0 | no | 0 | 0 | 0 |" in md
     assert "**Changed position:** Ana." in md
+    assert "No speaker cited a source." in md
 
 
 def test_nobody_moved():
     t = _transcript()
     t["rounds"] = t["rounds"][:1]
     assert "**Changed position:** nobody." in scorecard_markdown(build_scorecard(t))
+
+
+def test_sources_are_listed_once_in_order_without_the_position_line():
+    text = (
+        "Fares cover 40% of costs [source: Wiener Linien annual report 2024]. "
+        "Ridership doubled [source:  Statistik  Austria ]. "
+        "As said, 40% of costs [source: Wiener Linien annual report 2024].\n\n"
+        "POSITION: I support it."
+    )
+    assert sources(text) == ["Wiener Linien annual report 2024", "Statistik Austria"]
+    assert unsupported(text) == 0
+
+
+@pytest.mark.parametrize("sentence", [
+    "Fares cover 40% of the running costs.",
+    "Congestion costs the city 2.5 billion a year.",
+    "A recent study proved the opposite.",
+    "According to the ministry, traffic fell.",
+    "The data shows a clear decline.",
+    "Prices rose 3 times faster than wages.",
+])
+def test_a_figure_or_a_study_without_a_source_is_unsupported(sentence):
+    assert unsupported(sentence) == 1
+    assert unsupported(sentence[:-1] + " [source: City budget 2025].") == 0
+
+
+@pytest.mark.parametrize("sentence", [
+    "I disagree with Ana on round 2 of this argument.",
+    "Our data is thin, so I stay cautious.",
+    "In 2019 the plan was first proposed.",
+])
+def test_plain_sentences_are_not_claims(sentence):
+    assert unsupported(sentence) == 0
+
+
+def test_every_speaker_is_told_how_to_cite():
+    from agora.agent import Agent
+    from agora.providers.dryrun import DryRunProvider
+
+    prompt = Agent("Ana", "a sceptic", provider=DryRunProvider())._build_system_prompt(1, 3, "opening")
+    assert "[source: <publication, organisation or URL>]" in prompt
+    assert "Never invent a source." in prompt
+
+
+def test_a_cue_only_in_the_position_line_does_not_count():
+    assert unsupported("I stay where I was.\n\nPOSITION: I oppose it because 60% of riders disagree.") == 0
+
+
+def test_scorecard_counts_sources_and_unsupported_claims_per_speaker():
+    t = _transcript()
+    t["rounds"][0]["turns"][1]["text"] = (
+        "Fares cover 40% of costs [source: City budget 2025]. A study found more. POSITION: I oppose it."
+    )
+    t["rounds"][2]["turns"][1]["text"] = "Costs are 40% [source: City budget 2025]. POSITION: I oppose it."
+    sc = build_scorecard(t)
+    ana, ben = sc["agents"]
+    assert (ana["sources"], ana["unsupported"]) == ([], 0)
+    assert (ben["sources"], ben["unsupported"]) == (["City budget 2025"], 1)
+    assert sc["unsupported"] == 1
+    md = scorecard_markdown(sc)
+    assert "| Ben | against → - → against | 0 | no | 0 | 1 | 1 |" in md
+    assert "**Unsupported claims:** 1 sentence(s)" in md
+    assert "### Evidence" in md and "- **Ben:** City budget 2025" in md
+    assert "agora did not open or check them" in md
 
 
 @pytest.fixture(autouse=True)
