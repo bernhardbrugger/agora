@@ -29,5 +29,6 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       # editable install: the presets are read from the repository's personas/ folder
-      - run: python -m pip install -e . pytest jsonschema
+      # [mcp] installs the MCP SDK on 3.10+, so the --mcp-call tests run against a real stdio server; 3.9 skips them
+      - run: python -m pip install -e ".[mcp]" pytest jsonschema
       - run: python -m pytest -q

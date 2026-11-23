@@ -6,7 +6,7 @@ Instructions for coding agents (and humans) working on this repository.
 
 ```bash
 python -m venv .venv                    # .venv/Scripts/activate on Windows, source .venv/bin/activate elsewhere
-pip install -e . pytest jsonschema      # editable: the presets are read from personas/ in the repository
+pip install -e ".[mcp]" pytest jsonschema   # editable; [mcp] (Python 3.10+) runs the --mcp-call tests too: the presets are read from personas/ in the repository
 python -m pytest -q                     # all tests; no network, no API key needed
 python -m agora presets                 # list the persona presets
 python -m agora run --topic "Should cities ban cars?" --preset investment_styles --rounds 3 --dry-run   # report goes to reports/ (gitignored)
@@ -23,6 +23,7 @@ than 3.9. On Windows, set `PYTHONIOENCODING=utf-8` when piping the output.
 | `agora/cli.py` | Click commands `run`, `replay`, `presets`, `formats`, `providers` |
 | `agora/debate.py` | rounds, phases, consensus score, dynamic termination |
 | `agora/evidence.py` | `--evidence`: local files as cards `E1`, `E2`, ... for every speaker; card text is untrusted data |
+| `agora/mcp_evidence.py` | `--mcp-server`/`--mcp-call`: one call per named tool of a local stdio MCP server before the debate, each result a card after the file cards; needs the optional `mcp` package (3.10+), tests use `tests/fake_mcp_server.py` |
 | `agora/formats/` | debate formats (`committee.yaml`, `court.yaml`, `redteam.yaml`) and their loader; the YAML spec is in the module docstring |
 | `agora/moderator.py` | moderator interventions (a bare `NONE` reply means "no intervention") |
 | `agora/providers/` | Anthropic, OpenAI, Gemini, Grok and the offline `dryrun` provider |

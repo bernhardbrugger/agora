@@ -95,6 +95,14 @@ def cli():
     help="A UTF-8 text file every speaker gets as an evidence card (E1, E2, ... in order; cite as [source: E1]). Repeat for more files.",
 )
 @click.option(
+    "--mcp-server", "mcp_server", default=None, metavar="COMMAND",
+    help="Start this local MCP server (stdio) to fetch evidence cards with --mcp-call, e.g. \"python -m quantdesk mcp\". Needs: pip install \"agora-debate[mcp]\".",
+)
+@click.option(
+    "--mcp-call", "mcp_calls", multiple=True, metavar="'TOOL {JSON}'",
+    help="Call this tool of --mcp-server once before the debate; its result becomes the next evidence card. Use read-only tools. Repeat for more.",
+)
+@click.option(
     "--dry-run", "dry_run", is_flag=True, default=False,
     help="Use canned offline replies instead of a model: no API key, no cost. Shows the flow, not a debate.",
 )
@@ -113,6 +121,8 @@ def run(
     no_interventions: bool,
     make_replay: bool,
     evidence_files: tuple[str, ...],
+    mcp_server: Optional[str],
+    mcp_calls: tuple[str, ...],
     dry_run: bool,
 ) -> None:
     """Run a structured multi-agent debate on any topic."""
@@ -122,6 +132,11 @@ def run(
     from agora.evidence import EvidenceError, load_evidence
     try:
         evidence = load_evidence(evidence_files)
+        if mcp_calls or mcp_server:
+            if not mcp_calls:
+                raise EvidenceError("--mcp-server needs at least one --mcp-call")
+            from agora.mcp_evidence import load_mcp_evidence
+            evidence += load_mcp_evidence(mcp_server or "", mcp_calls, first_number=len(evidence) + 1)
     except EvidenceError as exc:
         console.print(f"[bold red]Error:[/bold red] {exc}")
         sys.exit(1)

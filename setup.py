@@ -35,6 +35,7 @@ setup(
         "openai": ["openai>=1.0.0"],
         "gemini": ["google-generativeai>=0.3.0"],
         "grok": ["openai>=1.0.0"],
+        "mcp": ["mcp>=1.2; python_version>='3.10'"],
         "all": ["openai>=1.0.0", "google-generativeai>=0.3.0"],
     },
     entry_points={

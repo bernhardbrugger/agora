@@ -7,6 +7,12 @@ reconstructed from the git history.
 ## [Unreleased]
 
 ### Added
+- Evidence from an MCP server: `agora run --mcp-server "CMD" --mcp-call 'TOOL {JSON}'` (repeatable) starts a local
+  stdio MCP server, calls each named tool once before round 1 and turns every result into the next evidence card
+  (`mcp: TOOL {args}`), numbered after the `--evidence` files and limited by the same 20 cards and 4,000 characters.
+  Speakers see only the cards and cannot call tools. A tool error, an unknown tool or a server that does not start
+  (60 s) stops the run with the tool's message. Optional extra `agora-debate[mcp]` (Python 3.10+); CI runs the tests
+  against a fake stdio server in `tests/fake_mcp_server.py`.
 - Evidence cards: `agora run --evidence FILE` (repeatable, up to 20 UTF-8 files, each cut at 4,000 characters) gives
   every speaker the files as cards `E1`, `E2`, ... with a rule to cite them as `[source: E1]`; the cards are fenced in
   the prompt and marked as data, not instructions. The report lists the cards, the transcript records them in an

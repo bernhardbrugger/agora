@@ -329,6 +329,28 @@ pass files you trust. When a speaker cites a card id that was never given (`[sou
 the Evidence list ends with a bold `Unknown cards: ...` line in the report and on the replay page. agora checks neither
 that a cited card says what the speaker claims nor that the file is true.
 
+#### Evidence from an MCP server
+
+Cards can also come from the tools of a local MCP server (stdio), for example a parliament or market-data server.
+agora starts the server, calls each `--mcp-call` tool once with its JSON arguments before round 1, and turns every
+result into the next card, numbered after the `--evidence` files. The speakers only see the cards; they cannot call
+tools themselves. Needs the optional MCP SDK (Python 3.10+): `pip install "agora-debate[mcp]"`.
+
+```bash
+agora run --topic "Should Austria lower the voting age to 14?" --agents 2 --rounds 2 --dry-run \
+  --mcp-server "npx -y parlament-at-mcp" --mcp-call 'parl_suche {"suche": "Wahlalter"}'
+```
+
+```text
+**Evidence cards** (given to every speaker; cite as `[source: E1]`):
+
+- `E1` `mcp: parl_suche {"suche": "Wahlalter"}` (4000 characters, cut)
+```
+
+Name read-only tools only: agora cannot tell a lookup from a tool that changes something and calls exactly what you
+list. A tool error, an unknown tool or a server that does not start (60 s limit) stops the run before any report,
+with the tool's own message. Tool output is untrusted data like a file card: fenced in the prompt, escaped everywhere.
+
 ---
 
 ## 📋 Presets
