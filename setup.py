@@ -21,7 +21,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     package_data={
-        "": ["personas/*.yaml"],
+        "agora": ["personas/*.yaml"],
         "agora.formats": ["*.yaml"],
     },
     install_requires=[

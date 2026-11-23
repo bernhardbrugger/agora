@@ -6,7 +6,7 @@ Instructions for coding agents (and humans) working on this repository.
 
 ```bash
 python -m venv .venv                    # .venv/Scripts/activate on Windows, source .venv/bin/activate elsewhere
-pip install -e ".[mcp]" pytest jsonschema   # editable; [mcp] (Python 3.10+) runs the --mcp-call tests too: the presets are read from personas/ in the repository
+pip install -e ".[mcp]" pytest jsonschema   # editable; [mcp] (Python 3.10+) runs the --mcp-call tests too
 python -m pytest -q                     # all tests; no network, no API key needed
 python -m agora presets                 # list the persona presets
 python -m agora run --topic "Should cities ban cars?" --preset investment_styles --rounds 3 --dry-run   # report goes to reports/ (gitignored)
@@ -31,7 +31,7 @@ than 3.9. On Windows, set `PYTHONIOENCODING=utf-8` when piping the output.
 | `agora/replay.py` | `agora replay`: transcript -> one static HTML page; every string escaped (model output is untrusted), a CSP that blocks all network loads, no external scripts, fonts or images |
 | `agora/scorecard.py` | the scorecard of the report and the replay page (stance shifts, repeated sentences, cited sources, unsupported claims, steelman and crux lines), computed from the transcript without a model |
 | `agora/transcript.py` | the JSON transcript written next to the report; schema in `docs/transcript.schema.json` (change both together, raise `schema_version` when a reader would break) |
-| `personas/*.yaml` | presets: a panel name and 2-5 agents with a role description |
+| `agora/personas/*.yaml` | presets: a panel name and 2-5 agents with a role description |
 | `tests/` | pytest; providers are tested against fake SDK modules |
 
 ## Rules

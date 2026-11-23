@@ -6,6 +6,7 @@ No test calls a real LLM provider.
 from __future__ import annotations
 
 import re
+from pathlib import Path
 
 import pytest
 
@@ -189,3 +190,10 @@ def test_report_contains_rounds_scores_and_synthesis(tmp_path):
 )
 def test_position_polarity_matches_whole_words(text, expected):
     assert position_polarity(text) == expected
+
+
+def test_presets_live_inside_the_package_so_a_wheel_ships_them():
+    import agora
+    package = Path(agora.__file__).resolve().parent
+    assert personas.PERSONAS_DIR.parent == package
+    assert "investment_styles" in personas.list_presets()

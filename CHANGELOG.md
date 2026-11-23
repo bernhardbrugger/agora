@@ -72,6 +72,10 @@ reconstructed from the git history.
   account of what is tested.
 
 ### Fixed
+- A non-editable install (`pip install git+https://github.com/bernhardbrugger/agora`, later PyPI) found no presets,
+  because they lived in a top-level `personas/` folder the wheel did not include. They now live in `agora/personas/`
+  and ship as package data; a CI job builds the wheel, installs it outside the checkout and runs `agora presets`,
+  `agora formats` and a dry-run debate.
 - The moderator dropped every intervention whose text started with "None" ("None of you has said
   ..."); only a bare `NONE` now means no intervention.
 - The consensus score matched position words inside other words; it now matches whole words.

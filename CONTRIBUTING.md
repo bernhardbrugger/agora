@@ -4,7 +4,7 @@ Thanks for your interest in contributing! Here's how you can help.
 
 ## 🎭 Submit a Persona Preset
 
-The easiest way to contribute! Create a YAML file in `personas/`:
+The easiest way to contribute! Create a YAML file in `agora/personas/`:
 
 ```yaml
 name: "Your Panel Name"

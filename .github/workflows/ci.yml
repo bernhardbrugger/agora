@@ -28,7 +28,24 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
-      # editable install: the presets are read from the repository's personas/ folder
       # [mcp] installs the MCP SDK on 3.10+, so the --mcp-call tests run against a real stdio server; 3.9 skips them
       - run: python -m pip install -e ".[mcp]" pytest jsonschema
       - run: python -m pytest -q
+
+  # what a user gets from a non-editable install (pip install git+..., later PyPI): the wheel must carry
+  # the presets and formats, or 'agora presets' finds nothing
+  wheel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - run: python -m pip wheel --no-deps -w dist .
+      - run: python -m venv /tmp/wheel-env && /tmp/wheel-env/bin/pip install dist/*.whl
+      - name: presets and formats work outside the checkout
+        working-directory: /tmp
+        run: |
+          /tmp/wheel-env/bin/agora presets | grep investment_styles
+          /tmp/wheel-env/bin/agora formats | grep committee
+          /tmp/wheel-env/bin/agora run --topic "Smoke test" --preset investment_styles --rounds 2 --dry-run --no-stream --output /tmp/reports

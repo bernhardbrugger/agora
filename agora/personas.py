@@ -7,7 +7,7 @@ from typing import Optional
 
 import yaml
 
-PERSONAS_DIR = Path(__file__).resolve().parent.parent / "personas"
+PERSONAS_DIR = Path(__file__).resolve().parent / "personas"  # inside the package, so wheels ship the presets
 
 AGENT_COLORS = [
     "cyan",
