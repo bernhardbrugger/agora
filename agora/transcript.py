@@ -30,10 +30,12 @@ def build_transcript(
     interventions: Optional[dict[int, str]] = None,
     created: Optional[datetime] = None,
     debate_format: Optional[dict] = None,
+    evidence: Optional[list[dict]] = None,
 ) -> dict:
     """Return the whole debate as a JSON-ready dict (schema version 1).
 
-    With a debate format, the optional ``format`` field records its id, name and disclaimer.
+    With a debate format, the optional ``format`` field records its id, name and disclaimer;
+    with evidence cards, the optional ``evidence`` field records the cards the speakers saw.
     """
     from agora.debate import position_polarity  # avoid an import cycle
 
@@ -75,6 +77,11 @@ def build_transcript(
             "name": debate_format["name"],
             "disclaimer": debate_format["disclaimer"],
         }
+    if evidence:
+        transcript["evidence"] = [
+            {"id": c["id"], "title": c["title"], "text": c["text"], "truncated": c["truncated"]}
+            for c in evidence
+        ]
     return transcript
 
 

@@ -90,6 +90,11 @@ def cli():
     help="Also write the HTML replay page next to the report (same as running 'agora replay' on the transcript).",
 )
 @click.option(
+    "--evidence", "evidence_files", multiple=True,
+    type=click.Path(exists=True, dir_okay=False),
+    help="A UTF-8 text file every speaker gets as an evidence card (E1, E2, ... in order; cite as [source: E1]). Repeat for more files.",
+)
+@click.option(
     "--dry-run", "dry_run", is_flag=True, default=False,
     help="Use canned offline replies instead of a model: no API key, no cost. Shows the flow, not a debate.",
 )
@@ -107,11 +112,19 @@ def run(
     convergence: float,
     no_interventions: bool,
     make_replay: bool,
+    evidence_files: tuple[str, ...],
     dry_run: bool,
 ) -> None:
     """Run a structured multi-agent debate on any topic."""
     if dry_run:
         provider, model = "dryrun", None
+
+    from agora.evidence import EvidenceError, load_evidence
+    try:
+        evidence = load_evidence(evidence_files)
+    except EvidenceError as exc:
+        console.print(f"[bold red]Error:[/bold red] {exc}")
+        sys.exit(1)
 
     # Validate provider and API key early
     try:
@@ -203,6 +216,7 @@ def run(
         convergence_threshold=convergence,
         moderator_interventions=not no_interventions,
         debate_format=debate_format,
+        evidence=evidence,
     )
     if make_replay:
         from pathlib import Path

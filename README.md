@@ -300,6 +300,32 @@ steelman, agora checks that the line is there, not whether it is the real crux, 
 speakers. `CRUX:` lines are left out of Repeats and Unsupported (a crux is a question, not a claim). The replay page shows the
 same Crux column and Cruxes list, each line escaped.
 
+### Evidence cards
+
+Give the speakers material to argue from: every `--evidence` file (UTF-8 text, up to 20 files, each cut at 4,000
+characters) becomes a card `E1`, `E2`, ... in the order given. Every speaker sees all cards in every round and is told
+to cite one as `[source: E1]`, so a citation points at something you can open instead of a name the model may have
+made up.
+
+```bash
+agora run --topic "Should cities ban cars?" --agents 2 --rounds 2 --dry-run --evidence pilot-notes.md
+```
+
+The report lists the cards under its header, and the scorecard's Evidence list shows who cited which card:
+
+```text
+**Evidence cards** (given to every speaker; cite as `[source: E1]`):
+
+- `E1` `pilot-notes.md` (76 characters)
+...
+- **The Analyst:** E1
+- **The Pragmatist:** E1
+```
+
+The JSON transcript keeps each card's id, file name and text (field `evidence`). A card is treated as data, not as
+instructions: the prompt fences each one and says so, but a model can still be swayed by what a file says, so only
+pass files you trust. agora checks neither that a cited card says what the speaker claims nor that the file is true.
+
 ---
 
 ## 📋 Presets

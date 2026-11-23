@@ -7,6 +7,11 @@ reconstructed from the git history.
 ## [Unreleased]
 
 ### Added
+- Evidence cards: `agora run --evidence FILE` (repeatable, up to 20 UTF-8 files, each cut at 4,000 characters) gives
+  every speaker the files as cards `E1`, `E2`, ... with a rule to cite them as `[source: E1]`; the cards are fenced in
+  the prompt and marked as data, not instructions. The report lists the cards, the transcript records them in an
+  optional `evidence` field (schema updated, version unchanged), and the dry-run provider cites the first card.
+  agora does not check that a citation matches the card.
 - Crux check: every turn asks for one `CRUX:` sentence, the question of fact or value that would change the
   speaker's position; the report's scorecard shows per speaker how many turns had one (`given/asked`) and lists each
   speaker's latest crux. It checks presence, not quality, and does not match cruxes across speakers. `CRUX:` lines do

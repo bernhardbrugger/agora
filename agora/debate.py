@@ -131,9 +131,13 @@ def run_debate(
     convergence_threshold: float = 0.75,
     moderator_interventions: bool = True,
     debate_format: Optional[dict] = None,
+    evidence: Optional[list[dict]] = None,
 ) -> str:
     """
     Run a full structured debate and return the path to the saved report.
+
+    ``evidence`` (from ``agora.evidence.load_evidence``) is given to every speaker,
+    listed in the report and recorded in the transcript.
 
     Debate structure:
       Round 1              → Opening statements
@@ -159,6 +163,7 @@ def run_debate(
             role=cfg["role"],
             color=cfg.get("color", "white"),
             provider=llm,
+            evidence=evidence,
         )
         for cfg in agent_configs
     ]
@@ -244,7 +249,7 @@ def run_debate(
     transcript = build_transcript(
         topic, agent_configs, rounds, provider_label,
         history, synthesis, consensus_scores, interventions,
-        debate_format=debate_format,
+        debate_format=debate_format, evidence=evidence,
     )
     report_path = _save_report(
         topic, agent_configs, effective_rounds, provider_label,
@@ -252,6 +257,7 @@ def run_debate(
         format_name=debate_format["name"] if debate_format else None,
         disclaimer=disclaimer,
         scorecard=scorecard_markdown(build_scorecard(transcript)),
+        evidence=evidence,
     )
     transcript_path = save_transcript(Path(report_path).with_suffix(".json"), transcript)
     renderer.print_saved(report_path)
@@ -275,8 +281,12 @@ def _save_report(
     format_name: Optional[str] = None,
     disclaimer: Optional[str] = None,
     scorecard: Optional[str] = None,
+    evidence: Optional[list[dict]] = None,
 ) -> str:
-    """Serialise the full debate as a Markdown report (the scorecard section goes last)."""
+    """Serialise the full debate as a Markdown report (the scorecard section goes last).
+
+    Evidence cards are listed by id and file name only; their text is in the transcript.
+    """
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
 
@@ -302,6 +312,13 @@ def _save_report(
     ]
     if disclaimer:
         lines += [f"> **Disclaimer:** {disclaimer}", ""]
+    if evidence:
+        lines += ["**Evidence cards** (given to every speaker; cite as `[source: E1]`):", ""]
+        for card in evidence:
+            cut = ", cut" if card["truncated"] else ""
+            title = card["title"].replace("`", "'")  # keep the file name inside its code span
+            lines.append(f"- `{card['id']}` `{title}` ({len(card['text'])} characters{cut})")
+        lines.append("")
     lines += ["---", ""]
 
     current_round: Optional[int] = None

@@ -65,6 +65,22 @@
         "name": { "type": "string" },
         "disclaimer": { "type": "string", "description": "Shown before the debate, in the report and on the replay page." }
       }
+    },
+    "evidence": {
+      "type": "array",
+      "description": "Present only when the debate ran with --evidence: the cards every speaker was given. The text is untrusted (it comes from the user's files): escape it before showing it as HTML.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title", "text", "truncated"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^E[1-9][0-9]*$", "description": "What speakers cite, as [source: E1]." },
+          "title": { "type": "string", "description": "The file name." },
+          "text": { "type": "string", "description": "The text the speakers saw." },
+          "truncated": { "type": "boolean", "description": "True when the file was longer than the card and was cut." }
+        }
+      }
     }
   }
 }

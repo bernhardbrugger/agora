@@ -15,6 +15,7 @@ from agora.providers.base import LLMProvider
 _NAME_RE = re.compile(r"You are '(.+?)' participating")
 _PHASE_RE = re.compile(r"CURRENT PHASE: (.+?) \(Round (\d+) of (\d+)\)")
 _TOPIC_RE = re.compile(r'(?:debate topic is|Debate topic): "([^"]*)"')
+_CARD_RE = re.compile(r"Evidence cards (E\d+)")  # the first card id from the speaker's rules
 
 # Speakers alternate between the two stances in the order they first speak; every
 # speaker ends on "support" in the closing round.
@@ -65,10 +66,15 @@ class DryRunProvider(LLMProvider):
             if "STEELMAN: " in system else ""
         )
         crux = "CRUX: [dry run] the question that would change my mind goes here.\n" if "CRUX: " in system else ""
+        card = _CARD_RE.search(system)
+        cites = (
+            f"[dry run] A real speaker would argue from the evidence here [source: {card.group(1)}].\n\n"
+            if card else ""
+        )
         return (
             f"[dry run] {name}, {label.lower()} in round {round_num}. "
             f'This is canned text: no model was called for "{topic}".\n\n'
-            f"{steelman}{crux}POSITION: I {stance} it."
+            f"{cites}{steelman}{crux}POSITION: I {stance} it."
         )
 
     def stream(self, system: str, messages: list[dict], max_tokens: int = 1024) -> Iterator[str]:
