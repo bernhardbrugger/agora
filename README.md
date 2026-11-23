@@ -297,7 +297,8 @@ Every turn, from round 1 on, also asks for one sentence starting with `CRUX:` th
 which, answered the other way, would change the speaker's position. **Crux** shows how many turns had one (`3/3`),
 and the Cruxes list quotes each speaker's latest crux: what was still open for them when they last spoke. Like the
 steelman, agora checks that the line is there, not whether it is the real crux, and it does not match cruxes across
-speakers. `CRUX:` lines are left out of Repeats and Unsupported (a crux is a question, not a claim).
+speakers. `CRUX:` lines are left out of Repeats and Unsupported (a crux is a question, not a claim). The replay page shows the
+same Crux column and Cruxes list, each line escaped.
 
 ---
 

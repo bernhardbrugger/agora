@@ -222,7 +222,7 @@ def test_scorecard_shows_the_steelman_column_and_list_escaped():
         {"round": 3, "phase": "closing", "agent": "Bo", "text": "No again.\nPOSITION: I oppose it."},
     ], agent_configs=[{"name": "Bo"}], consensus_scores=[0.5, 0.5, 0.5], interventions={})
     section = render_replay(t).split("<h2>Scorecard</h2>", 1)[1].split("<section", 1)[0]
-    row = re.search(r"<tr><td>Bo</td>(?:<td>.*?</td>){6}<td>(.*?)</td></tr>", section)
+    row = re.search(r"<tr><td>Bo</td>(?:<td>[^<]*</td>){6}<td>([^<]*)</td><td>[^<]*</td></tr>", section)
     assert row and row.group(1) == "1/2"
     steel = section.split("<h3>Steelman</h3>", 1)[1]
     assert "1 of 2 turn(s) from round 2 on" in steel
@@ -235,5 +235,22 @@ def test_one_round_replay_asks_for_no_steelman():
         {"round": 1, "phase": "opening", "agent": "Bo", "text": "No.\nPOSITION: I oppose it."},
     ], agent_configs=[{"name": "Bo"}], consensus_scores=[0.5], interventions={})
     section = render_replay(t).split("<h2>Scorecard</h2>", 1)[1].split("<section", 1)[0]
-    assert re.search(r"<tr><td>Bo</td>(?:<td>.*?</td>){6}<td>-</td></tr>", section)
+    assert re.search(r"<tr><td>Bo</td>(?:<td>[^<]*</td>){6}<td>-</td><td>0/1</td></tr>", section)
     assert "A one-round debate asks for no steelman." in section
+    assert "No speaker named a crux." in section
+
+
+def test_scorecard_shows_the_crux_column_and_the_latest_crux_escaped():
+    t = _transcript(history=[
+        {"round": 1, "phase": "opening", "agent": "Bo", "text": "No.\nCRUX: Do buses run on time?\nPOSITION: I oppose it."},
+        {"round": 2, "phase": "closing", "agent": "Bo", "text": "Still no.\nPOSITION: I oppose it."},
+        {"round": 3, "phase": "closing", "agent": "Bo",
+         "text": f"No again.\nCRUX: Would {EVIL} shops survive?\nPOSITION: I oppose it."},
+    ], agent_configs=[{"name": "Bo"}], consensus_scores=[0.5, 0.5, 0.5], interventions={})
+    section = render_replay(t).split("<h2>Scorecard</h2>", 1)[1].split("<section", 1)[0]
+    assert "<th>Steelman</th><th>Crux</th></tr>" in section
+    assert re.search(r"<tr><td>Bo</td>(?:<td>[^<]*</td>){7}<td>2/3</td></tr>", section)
+    cruxes = section.split("<h3>Cruxes</h3>", 1)[1]
+    assert "2 of 3 turn(s) named" in cruxes
+    assert cruxes.count("<li>") == 1 and "(round 3)" in cruxes and "buses" not in cruxes
+    assert "<script" not in cruxes and "Would &lt;script&gt;" in cruxes
