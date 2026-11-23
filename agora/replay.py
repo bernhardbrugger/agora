@@ -139,18 +139,32 @@ def render_replay(t: dict) -> str:
     card = build_scorecard(t)
     add("<h2>Scorecard</h2>")
     add('<p class="meta">Computed from the transcript, no model involved. It scores the debate, not the truth of the topic.</p>')
-    add("<table><thead><tr><th>Agent</th><th>Stance by round</th><th>Shifts</th><th>Moved</th><th>Repeats</th></tr></thead><tbody>")
+    add(
+        "<table><thead><tr><th>Agent</th><th>Stance by round</th><th>Shifts</th><th>Moved</th><th>Repeats</th>"
+        "<th>Sources</th><th>Unsupported</th></tr></thead><tbody>"
+    )
     for a in card["agents"]:
         by_round = " → ".join(s or "-" for s in a["stances"]) or "-"
         moved = f"yes ({a['opening']} → {a['closing']})" if a["moved"] else "no"
         add(
             f"<tr><td>{e(a['name'])}</td><td>{e(by_round)}</td><td>{int(a['shifts'])}</td>"
-            f"<td>{e(moved)}</td><td>{int(a['repeats'])}</td></tr>"
+            f"<td>{e(moved)}</td><td>{int(a['repeats'])}</td><td>{len(a['sources'])}</td>"
+            f"<td>{int(a['unsupported'])}</td></tr>"
         )
     add("</tbody></table>")
     moved_names = ", ".join(card["moved"]) or "nobody"
     add(f'<p class="meta">Changed position: {e(moved_names)}. Repeated arguments: {int(card["repeats"])} sentence(s) '
-        f"restated a speaker's own earlier sentence (at least {REPEAT_OVERLAP:.0%} the same words).</p>")
+        f"restated a speaker's own earlier sentence (at least {REPEAT_OVERLAP:.0%} the same words). "
+        f"Unsupported claims: {int(card['unsupported'])} sentence(s) gave a figure or leaned on a study, survey or "
+        "statistic without a [source: ...] (a word pattern, not a fact check).</p>")
+    cited = [(a["name"], c) for a in card["agents"] for c in a["sources"]]
+    add("<h3>Evidence</h3>")
+    if cited:
+        add('<p class="meta">Sources as cited by the speakers. agora did not open or check them; '
+            "a model can invent a source. They are shown as text, never as links.</p>")
+        add("<ul>" + "".join(f"<li><strong>{e(name)}:</strong> {e(c)}</li>" for name, c in cited) + "</ul>")
+    else:
+        add('<p class="meta">No speaker cited a source.</p>')
 
     # ── the debate itself ───────────────────────────────────────────────
     for r in rounds:

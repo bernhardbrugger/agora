@@ -10,6 +10,8 @@ reconstructed from the git history.
 - Evidence in the report: speakers are told to cite figures, studies and statistics inline as `[source: ...]`; the
   scorecard counts each speaker's distinct sources and "unsupported" sentences (a figure or a study/statistic cue
   without a citation), and an Evidence list names what was cited. Sources are listed as claimed, never checked.
+  The replay page shows the Sources and Unsupported columns and the Evidence list too, each source escaped and
+  shown as text, never as a link.
 - A scorecard at the end of every report, computed from the transcript without a model: each speaker's stance by
   round, how often it shifted, who changed position from opening to closing, and how many sentences restated the
   speaker's own earlier sentence. It scores the debate, not the truth of the topic. The replay page shows the

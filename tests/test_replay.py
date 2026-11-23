@@ -171,13 +171,36 @@ def test_run_without_replay_writes_no_page(tmp_path, _offline):
 def test_scorecard_matches_the_report_numbers():
     page = render_replay(_transcript())
     section = page.split("<h2>Scorecard</h2>", 1)[1].split("<section", 1)[0]
-    rows = re.findall(r"<tr><td>(.*?)</td><td>(.*?)</td><td>(\d+)</td><td>(.*?)</td><td>(\d+)</td></tr>", section)
-    assert [(name.startswith("Ada"), stances, shifts, moved) for name, stances, shifts, moved, _ in rows] == [
+    rows = re.findall(
+        r"<tr><td>(.*?)</td><td>(.*?)</td><td>(\d+)</td><td>(.*?)</td><td>(\d+)</td><td>(\d+)</td><td>(\d+)</td></tr>",
+        section,
+    )
+    assert [(name.startswith("Ada"), stances, shifts, moved) for name, stances, shifts, moved, *_ in rows] == [
         (True, "for → -", "0", "no"),                     # one stated stance: never "moved"
         (False, "against → for", "1", "yes (against → for)"),
     ]
     assert "Changed position: Bo." in section
     assert "Repeated arguments: 0 sentence(s)" in section
+    assert "Unsupported claims: 0 sentence(s)" in section
+    assert "No speaker cited a source." in section
+
+
+def test_scorecard_shows_sources_and_unsupported_claims_like_the_report():
+    t = _transcript(history=[
+        {"round": 1, "phase": "opening", "agent": "Bo",
+         "text": f"Traffic deaths fell 30% [source: Vision Zero report {EVIL}]. "
+                 "A study found that most trips are short.\nPOSITION: I support it."},
+        {"round": 2, "phase": "closing", "agent": "Bo",
+         "text": "Costs rose 12 billion [source: https://example.org/costs].\nPOSITION: I support it."},
+    ], agent_configs=[{"name": "Bo"}], consensus_scores=[0.5, 0.5], interventions={})
+    section = render_replay(t).split("<h2>Scorecard</h2>", 1)[1].split("<section", 1)[0]
+    row = re.search(r"<tr><td>Bo</td>(?:<td>.*?</td>){4}<td>(\d+)</td><td>(\d+)</td></tr>", section)
+    assert row and row.groups() == ("2", "1")  # two sources cited, the study sentence has none
+    assert "Unsupported claims: 1 sentence(s)" in section
+    evidence = section.split("<h3>Evidence</h3>", 1)[1]
+    assert evidence.count("<li>") == 2
+    assert "<script" not in evidence and "Vision Zero report &lt;script&gt;" in evidence
+    assert "<a " not in evidence and "https://example.org/costs" in evidence  # a cited URL is text, never a link
 
 
 def test_scorecard_counts_repeats_and_names_nobody_when_nobody_moved():

@@ -264,7 +264,8 @@ and to call a number its own estimate when it has none. **Sources** counts the d
 the Evidence list names them. **Unsupported** counts sentences that state a percentage, an amount in millions or
 billions or a multiple, or lean on a study, survey, report or statistic, without a citation in the same sentence.
 agora does not open or check a cited source, and a model can invent one: treat the list as "what was claimed", not
-"what is true". The replay page does not show sources yet.
+"what is true". The replay page shows the same Sources and Unsupported columns and the Evidence list, each cited
+source as plain text (a cited URL is never turned into a link).
 
 ---
 
