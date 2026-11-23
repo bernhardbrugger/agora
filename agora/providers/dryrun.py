@@ -64,10 +64,11 @@ class DryRunProvider(LLMProvider):
             "STEELMAN: [dry run] the other side's strongest argument goes here.\n"
             if "STEELMAN: " in system else ""
         )
+        crux = "CRUX: [dry run] the question that would change my mind goes here.\n" if "CRUX: " in system else ""
         return (
             f"[dry run] {name}, {label.lower()} in round {round_num}. "
             f'This is canned text: no model was called for "{topic}".\n\n'
-            f"{steelman}POSITION: I {stance} it."
+            f"{steelman}{crux}POSITION: I {stance} it."
         )
 
     def stream(self, system: str, messages: list[dict], max_tokens: int = 1024) -> Iterator[str]:

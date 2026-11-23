@@ -7,6 +7,10 @@ reconstructed from the git history.
 ## [Unreleased]
 
 ### Added
+- Crux check: every turn asks for one `CRUX:` sentence, the question of fact or value that would change the
+  speaker's position; the report's scorecard shows per speaker how many turns had one (`given/asked`) and lists each
+  speaker's latest crux. It checks presence, not quality, and does not match cruxes across speakers. `CRUX:` lines do
+  not count as repeats or unsupported claims. The dry-run provider emits a placeholder crux line.
 - Steelman check: from round 2 on, speakers are asked for one `STEELMAN:` sentence that states the other side's
   strongest argument; the report's scorecard shows per speaker how many of those turns had one (`given/asked`) and
   quotes them in a Steelman list. It checks presence, not quality. `STEELMAN:` lines do not count as repeats or

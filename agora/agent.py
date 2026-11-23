@@ -143,6 +143,9 @@ class Agent:
             f"[source: <publication, organisation or URL>]. If you cannot name one, say it is "
             f"your own estimate. Never invent a source.\n"
             f"{steelman_rule}"
+            f"• Just before your POSITION sentence, write one sentence starting with 'CRUX: ' "
+            f"that names the one question of fact or value which, answered the other way, "
+            f"would change your position.\n"
             f"• End every response with a single sentence starting with 'POSITION: ' that "
             f"states your current stance (e.g. 'POSITION: I strongly support X because Y.')."
         )

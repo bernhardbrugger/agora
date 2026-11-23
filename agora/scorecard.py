@@ -20,8 +20,15 @@ good argument or by a bad one.
 * **Steelman** counts the turns from round 2 on in which a speaker stated the
   best argument of the other side in a ``STEELMAN:`` line, out of the turns
   where one was asked for. agora checks that the line is there, not how good
-  it is. ``POSITION:`` and ``STEELMAN:`` lines never count as repeats or as
-  unsupported claims (a steelman restates the other side).
+  it is.
+* **Crux** counts the turns in which a speaker named, in a ``CRUX:`` line, the
+  one question of fact or value that would change their position if it were
+  answered the other way, out of all their turns. The Cruxes list quotes each
+  speaker's latest one: what was still open for them when they last spoke.
+  agora checks that the line is there; it does not match cruxes across speakers.
+
+``POSITION:``, ``STEELMAN:`` and ``CRUX:`` lines never count as repeats or as
+unsupported claims (a steelman restates the other side, a crux is a question).
 """
 
 from __future__ import annotations
@@ -43,6 +50,7 @@ _CLAIM = re.compile(
 )
 # "STEELMAN: ..." at the start of a line, also with Markdown emphasis such as "**STEELMAN:** ..."
 _STEELMAN = re.compile(r"^[ \t*_>]*STEELMAN[ \t*_]*:[ \t*_]*(.*?)[ \t*_]*$", re.I | re.M)
+_CRUX = re.compile(r"^[ \t*_>]*CRUX[ \t*_]*:[ \t*_]*(.*?)[ \t*_]*$", re.I | re.M)
 
 
 def stance(polarity: float) -> str:
@@ -55,20 +63,29 @@ def stance(polarity: float) -> str:
 
 
 def _body(text: str) -> str:
-    """The turn without its POSITION and STEELMAN lines."""
+    """The turn without its POSITION, STEELMAN and CRUX lines."""
     return "\n".join(
         line for line in text.splitlines()
-        if not line.strip().upper().startswith("POSITION:") and not _STEELMAN.match(line)
+        if not line.strip().upper().startswith("POSITION:") and not _STEELMAN.match(line) and not _CRUX.match(line)
     )
 
 
-def steelman(text: str) -> Optional[str]:
-    """The text of the first non-empty ``STEELMAN:`` line of a turn, or None."""
-    for match in _STEELMAN.finditer(text):
+def _first_line(pattern: re.Pattern, text: str) -> Optional[str]:
+    for match in pattern.finditer(text):
         said = " ".join(match.group(1).split())
         if said:
             return said
     return None
+
+
+def steelman(text: str) -> Optional[str]:
+    """The text of the first non-empty ``STEELMAN:`` line of a turn, or None."""
+    return _first_line(_STEELMAN, text)
+
+
+def crux(text: str) -> Optional[str]:
+    """The text of the first non-empty ``CRUX:`` line of a turn, or None."""
+    return _first_line(_CRUX, text)
 
 
 def sources(text: str) -> list[str]:
@@ -107,7 +124,7 @@ def _overlap(a: frozenset[str], b: frozenset[str]) -> float:
 def _row(name: str) -> dict:
     return {
         "name": name, "stances": [], "shifts": 0, "repeats": 0, "sources": [], "unsupported": 0,
-        "steelman_due": 0, "steelmen": [],
+        "steelman_due": 0, "steelmen": [], "crux_due": 0, "cruxes": [],
     }
 
 
@@ -133,6 +150,10 @@ def build_scorecard(transcript: dict) -> dict:
                 said_steelman = steelman(text)
                 if said_steelman:
                     row["steelmen"].append({"round": rnd["number"], "text": said_steelman})
+            row["crux_due"] += 1
+            said_crux = crux(text)
+            if said_crux:
+                row["cruxes"].append({"round": rnd.get("number", 1), "text": said_crux})
 
     for row in rows.values():
         stated = [s for s in row["stances"] if s is not None]
@@ -149,12 +170,24 @@ def build_scorecard(transcript: dict) -> dict:
         "unsupported": sum(a["unsupported"] for a in agents),
         "steelman_due": sum(a["steelman_due"] for a in agents),
         "steelmen": sum(len(a["steelmen"]) for a in agents),
+        "crux_due": sum(a["crux_due"] for a in agents),
+        "cruxes": sum(len(a["cruxes"]) for a in agents),
     }
 
 
 def steelman_cell(agent: dict) -> str:
     """``given/asked`` for one speaker, ``-`` when no steelman was asked for (a one-round debate)."""
     return f"{len(agent['steelmen'])}/{agent['steelman_due']}" if agent["steelman_due"] else "-"
+
+
+def crux_cell(agent: dict) -> str:
+    """``given/asked`` for one speaker, ``-`` when they never spoke."""
+    return f"{len(agent['cruxes'])}/{agent['crux_due']}" if agent["crux_due"] else "-"
+
+
+def latest_cruxes(scorecard: dict) -> list[tuple[str, dict]]:
+    """Each speaker's latest crux as ``(name, {"round", "text"})``, in speaker order."""
+    return [(a["name"], a["cruxes"][-1]) for a in scorecard["agents"] if a["cruxes"]]
 
 
 def scorecard_markdown(scorecard: dict) -> str:
@@ -164,13 +197,13 @@ def scorecard_markdown(scorecard: dict) -> str:
         "",
         "Computed from the transcript, no model involved. It scores the debate, not the truth of the topic.",
         "",
-        "| Agent | Stance by round | Shifts | Moved | Repeats | Sources | Unsupported | Steelman |",
-        "|-------|-----------------|--------|-------|---------|---------|-------------|----------|",
+        "| Agent | Stance by round | Shifts | Moved | Repeats | Sources | Unsupported | Steelman | Crux |",
+        "|-------|-----------------|--------|-------|---------|---------|-------------|----------|------|",
     ]
     for a in scorecard["agents"]:
         by_round = " → ".join(s or "-" for s in a["stances"]) or "-"
         moved = f"yes ({a['opening']} → {a['closing']})" if a["moved"] else "no"
-        lines.append(f"| {a['name']} | {by_round} | {a['shifts']} | {moved} | {a['repeats']} | {len(a['sources'])} | {a['unsupported']} | {steelman_cell(a)} |")
+        lines.append(f"| {a['name']} | {by_round} | {a['shifts']} | {moved} | {a['repeats']} | {len(a['sources'])} | {a['unsupported']} | {steelman_cell(a)} | {crux_cell(a)} |")
     lines.append("")
     if scorecard["moved"]:
         lines.append(f"**Changed position:** {', '.join(scorecard['moved'])}.")
@@ -206,4 +239,15 @@ def scorecard_markdown(scorecard: dict) -> str:
             lines += [f"- **{name}** (round {s['round']}): {s['text']}" for name, s in stated]
     else:
         lines.append("A one-round debate asks for no steelman.")
+    lines += ["", "### Cruxes", ""]
+    lines.append(
+        f"{scorecard['cruxes']} of {scorecard['crux_due']} turn(s) named, in a `CRUX:` line, the question that would "
+        "change the speaker's position. Each speaker's latest one, what was still open when they last spoke:"
+    )
+    lines.append("")
+    open_cruxes = latest_cruxes(scorecard)
+    if open_cruxes:
+        lines += [f"- **{name}** (round {c['round']}): {c['text']}" for name, c in open_cruxes]
+    else:
+        lines.append("No speaker named a crux.")
     return "\n".join(lines)
