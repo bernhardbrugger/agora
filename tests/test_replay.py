@@ -145,6 +145,24 @@ def test_no_format_disclaimer_without_a_format():
     assert "<strong>Disclaimer:</strong>" not in render_replay(_transcript())
 
 
+def test_evidence_cards_are_shown_escaped_with_their_ids():
+    cards = [
+        {"id": "E1", "title": f"notes {EVIL}.md", "text": f"Trips fell 12%. {EVIL}", "truncated": False},
+        {"id": "E2", "title": "long.txt", "text": "x" * 40, "truncated": True},
+    ]
+    html = render_replay(_transcript(evidence=cards))
+    assert "<script" not in html.lower() and "<img" not in html.lower()
+    assert "<h2>Evidence cards</h2>" in html
+    assert '<details class="turn" id="card-E1"><summary><strong>E1</strong> notes &lt;script&gt;' in html
+    assert "Trips fell 12%. &lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;" in html
+    assert "<strong>E2</strong> long.txt<small> · cut at 40 characters</small>" in html
+    assert html.count("cut at") == 1  # E1 was not cut
+
+
+def test_no_evidence_section_without_cards():
+    assert "Evidence cards" not in render_replay(_transcript())
+
+
 def test_run_with_replay_writes_the_page_next_to_the_report(tmp_path, _offline):
     result = CliRunner().invoke(
         cli,

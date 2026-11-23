@@ -322,7 +322,8 @@ The report lists the cards under its header, and the scorecard's Evidence list s
 - **The Pragmatist:** E1
 ```
 
-The JSON transcript keeps each card's id, file name and text (field `evidence`). A card is treated as data, not as
+The JSON transcript keeps each card's id, file name and text (field `evidence`), and the replay page shows each card
+as a collapsible section (`#card-E1`) before the debate, its text escaped. A card is treated as data, not as
 instructions: the prompt fences each one and says so, but a model can still be swayed by what a file says, so only
 pass files you trust. agora checks neither that a cited card says what the speaker claims nor that the file is true.
 

@@ -189,6 +189,18 @@ def render_replay(t: dict) -> str:
     else:
         add('<p class="meta">No speaker named a crux.</p>')
 
+    # ── evidence cards the speakers were given (--evidence); file text is untrusted ──
+    cards = t.get("evidence") or []
+    if cards:
+        add('<section id="evidence"><h2>Evidence cards</h2>')
+        add('<p class="meta">Files given to every speaker; they cite a card as [source: E1]. agora does not check '
+            "that a citation matches the card, nor that the file is true.</p>")
+        for c in cards:
+            cut = f" · cut at {len(c['text'])} characters" if c["truncated"] else ""
+            add(f'<details class="turn" id="card-{e(c["id"])}"><summary><strong>{e(c["id"])}</strong> '
+                f'{e(c["title"])}<small>{e(cut)}</small></summary><div class="text">{e(c["text"])}</div></details>')
+        add("</section>")
+
     # ── the debate itself ───────────────────────────────────────────────
     for r in rounds:
         n = int(r["number"])
