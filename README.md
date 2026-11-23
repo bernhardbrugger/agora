@@ -325,7 +325,9 @@ The report lists the cards under its header, and the scorecard's Evidence list s
 The JSON transcript keeps each card's id, file name and text (field `evidence`), and the replay page shows each card
 as a collapsible section (`#card-E1`) before the debate, its text escaped. A card is treated as data, not as
 instructions: the prompt fences each one and says so, but a model can still be swayed by what a file says, so only
-pass files you trust. agora checks neither that a cited card says what the speaker claims nor that the file is true.
+pass files you trust. When a speaker cites a card id that was never given (`[source: E7]` with only `E1` and `E2`),
+the Evidence list ends with a bold `Unknown cards: ...` line in the report and on the replay page. agora checks neither
+that a cited card says what the speaker claims nor that the file is true.
 
 ---
 

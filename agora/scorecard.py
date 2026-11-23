@@ -12,7 +12,9 @@ good argument or by a bad one.
 * **Repeats** counts sentences that restate one of the speaker's own earlier
   sentences almost word for word (same words, at least 80% overlap, 8+ words).
 * **Sources** are the inline ``[source: ...]`` citations a speaker gave. agora
-  lists them as cited; it does not open or check them.
+  lists them as cited; it does not open or check them. With evidence cards
+  (``--evidence``), a citation of a card id that was never given (``E7`` when
+  only ``E1``-``E2`` exist) is named as an unknown card.
 * **Unsupported** counts sentences that state a figure (a percentage, an amount
   in millions or billions, a multiple) or lean on a study, survey, report or
   statistic, with no ``[source: ...]`` in the same sentence. This is a word
@@ -51,6 +53,8 @@ _CLAIM = re.compile(
 # "STEELMAN: ..." at the start of a line, also with Markdown emphasis such as "**STEELMAN:** ..."
 _STEELMAN = re.compile(r"^[ \t*_>]*STEELMAN[ \t*_]*:[ \t*_]*(.*?)[ \t*_]*$", re.I | re.M)
 _CRUX = re.compile(r"^[ \t*_>]*CRUX[ \t*_]*:[ \t*_]*(.*?)[ \t*_]*$", re.I | re.M)
+# a citation that names evidence cards only: "E3", "E1, E3", "e2; E4"
+_CARD_REFS = re.compile(r"^E\d+(?:\s*[,;]\s*E\d+)*$", re.I)
 
 
 def stance(polarity: float) -> str:
@@ -86,6 +90,24 @@ def steelman(text: str) -> Optional[str]:
 def crux(text: str) -> Optional[str]:
     """The text of the first non-empty ``CRUX:`` line of a turn, or None."""
     return _first_line(_CRUX, text)
+
+
+def unknown_cards(scorecard: dict) -> list[tuple[str, str]]:
+    """``(speaker, card id)`` for every cited card id that was not among the given cards.
+
+    Only a citation made of card ids alone (``E3`` or ``E1, E3``) is checked, and only
+    when the debate had evidence cards; any other source is left as cited.
+    """
+    given = set(scorecard.get("cards", []))
+    if not given:
+        return []
+    out: list[tuple[str, str]] = []
+    for a in scorecard["agents"]:
+        for cited in a["sources"]:
+            if _CARD_REFS.match(cited):
+                out += [(a["name"], c) for c in re.findall(r"E\d+", cited.upper())
+                        if c not in given and (a["name"], c) not in out]
+    return out
 
 
 def sources(text: str) -> list[str]:
@@ -172,7 +194,19 @@ def build_scorecard(transcript: dict) -> dict:
         "steelmen": sum(len(a["steelmen"]) for a in agents),
         "crux_due": sum(a["crux_due"] for a in agents),
         "cruxes": sum(len(a["cruxes"]) for a in agents),
+        "cards": [c["id"] for c in transcript.get("evidence") or []],
     }
+
+
+def unknown_cards_note(scorecard: dict) -> Optional[str]:
+    """One sentence naming cited card ids that were never given; None when there are none."""
+    unknown = unknown_cards(scorecard)
+    if not unknown:
+        return None
+    given = scorecard["cards"]
+    cited = "; ".join(f"{name} cited {card}" for name, card in unknown)
+    verb = "was" if len(given) == 1 else "were"
+    return f"Unknown cards: {cited}, but only {', '.join(given)} {verb} given."
 
 
 def steelman_cell(agent: dict) -> str:
@@ -225,6 +259,9 @@ def scorecard_markdown(scorecard: dict) -> str:
         lines.append("Sources as cited by the speakers. agora did not open or check them; a model can invent a source.")
         lines.append("")
         lines += [f"- **{name}:** {c}" for name, c in cited]
+        note = unknown_cards_note(scorecard)
+        if note:
+            lines += ["", f"**{note}**"]
     else:
         lines.append("No speaker cited a source.")
     lines += ["", "### Steelman", ""]

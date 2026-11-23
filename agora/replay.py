@@ -12,7 +12,14 @@ from html import escape
 from pathlib import Path
 
 from agora.agent import PHASE_LABELS
-from agora.scorecard import REPEAT_OVERLAP, build_scorecard, crux_cell, latest_cruxes, steelman_cell
+from agora.scorecard import (
+    REPEAT_OVERLAP,
+    build_scorecard,
+    crux_cell,
+    latest_cruxes,
+    steelman_cell,
+    unknown_cards_note,
+)
 from agora.transcript import SCHEMA_ID, SCHEMA_VERSION
 
 DISCLAIMER = (
@@ -163,6 +170,9 @@ def render_replay(t: dict) -> str:
         add('<p class="meta">Sources as cited by the speakers. agora did not open or check them; '
             "a model can invent a source. They are shown as text, never as links.</p>")
         add("<ul>" + "".join(f"<li><strong>{e(name)}:</strong> {e(c)}</li>" for name, c in cited) + "</ul>")
+        note = unknown_cards_note(card)
+        if note:
+            add(f"<p><strong>{e(note)}</strong></p>")
     else:
         add('<p class="meta">No speaker cited a source.</p>')
     add("<h3>Steelman</h3>")

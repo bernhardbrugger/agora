@@ -6,7 +6,16 @@ import pytest
 from click.testing import CliRunner
 
 from agora.cli import cli
-from agora.scorecard import build_scorecard, crux, scorecard_markdown, sources, stance, steelman, unsupported
+from agora.scorecard import (
+    build_scorecard,
+    crux,
+    scorecard_markdown,
+    sources,
+    stance,
+    steelman,
+    unknown_cards,
+    unsupported,
+)
 
 LONG = "Rates matter more than earnings for long duration assets in every cycle we have seen."
 
@@ -293,3 +302,36 @@ def test_speakers_are_asked_for_a_crux_every_round():
     agent = Agent("Ana", "a sceptic", provider=DryRunProvider())
     assert "'CRUX: '" in agent._build_system_prompt(1, 3, "opening")
     assert "'CRUX: '" in agent._build_system_prompt(3, 3, "closing")
+
+
+def _cited(texts, evidence=("E1", "E2")):
+    t = {
+        "agents": [{"name": "Ana", "role": ""}, {"name": "Ben", "role": ""}],
+        "rounds": [{"number": 1, "turns": [_turn(n, txt, None, 0.0) for n, txt in texts]}],
+    }
+    if evidence:
+        t["evidence"] = [{"id": c, "title": f"{c}.txt", "text": "x", "truncated": False} for c in evidence]
+    return t
+
+
+def test_a_cited_card_that_was_never_given_is_named():
+    card = build_scorecard(_cited([
+        ("Ana", "Trips fell [source: E1]. Rides rose [source: E7]."),
+        ("Ben", "See [source: E2; e9] and [source: Transport Ministry 2024]."),
+    ]))
+    assert card["cards"] == ["E1", "E2"]
+    assert unknown_cards(card) == [("Ana", "E7"), ("Ben", "E9")]
+    md = scorecard_markdown(card)
+    assert "**Unknown cards: Ana cited E7; Ben cited E9, but only E1, E2 were given.**" in md
+
+
+def test_known_cards_and_other_sources_raise_no_note():
+    card = build_scorecard(_cited([("Ana", "[source: E1, E2]"), ("Ben", "[source: E10 report]")]))
+    assert unknown_cards(card) == []
+    assert "Unknown cards" not in scorecard_markdown(card)
+
+
+def test_without_evidence_cards_no_citation_is_checked():
+    card = build_scorecard(_cited([("Ana", "[source: E7]")], evidence=()))
+    assert card["cards"] == []
+    assert unknown_cards(card) == []

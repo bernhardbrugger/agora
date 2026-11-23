@@ -163,6 +163,17 @@ def test_no_evidence_section_without_cards():
     assert "Evidence cards" not in render_replay(_transcript())
 
 
+def test_a_cited_unknown_card_is_named_like_in_the_report():
+    cards = [{"id": "E1", "title": "a.txt", "text": "A.", "truncated": False}]
+    history = [
+        {"round": 1, "phase": "opening", "agent": "Bo", "text": "Fell [source: E4]. POSITION: I oppose it."},
+        {"round": 1, "phase": "opening", "agent": f"Ada {EVIL}", "text": "Rose [source: E1]."},
+    ]
+    html = render_replay(_transcript(evidence=cards, history=history))
+    assert "<p><strong>Unknown cards: Bo cited E4, but only E1 was given.</strong></p>" in html
+    assert "Unknown cards" not in render_replay(_transcript(evidence=cards))
+
+
 def test_run_with_replay_writes_the_page_next_to_the_report(tmp_path, _offline):
     result = CliRunner().invoke(
         cli,

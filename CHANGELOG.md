@@ -12,7 +12,9 @@ reconstructed from the git history.
   the prompt and marked as data, not instructions. The report lists the cards, the transcript records them in an
   optional `evidence` field (schema updated, version unchanged), and the dry-run provider cites the first card.
   agora does not check that a citation matches the card. The replay page shows the cards as collapsible sections
-  before the debate (anchor `#card-E1`), title and text escaped.
+  before the debate (anchor `#card-E1`), title and text escaped. A citation of a card id that was never given
+  (`[source: E7]` with only `E1`-`E2`) is named in an `Unknown cards` line under the Evidence list, in the report and
+  on the replay page.
 - Crux check: every turn asks for one `CRUX:` sentence, the question of fact or value that would change the
   speaker's position; the report's scorecard shows per speaker how many turns had one (`given/asked`) and lists each
   speaker's latest crux. It checks presence, not quality, and does not match cruxes across speakers. `CRUX:` lines do
