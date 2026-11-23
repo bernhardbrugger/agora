@@ -12,7 +12,7 @@ from html import escape
 from pathlib import Path
 
 from agora.agent import PHASE_LABELS
-from agora.scorecard import REPEAT_OVERLAP, build_scorecard
+from agora.scorecard import REPEAT_OVERLAP, build_scorecard, steelman_cell
 from agora.transcript import SCHEMA_ID, SCHEMA_VERSION
 
 DISCLAIMER = (
@@ -141,7 +141,7 @@ def render_replay(t: dict) -> str:
     add('<p class="meta">Computed from the transcript, no model involved. It scores the debate, not the truth of the topic.</p>')
     add(
         "<table><thead><tr><th>Agent</th><th>Stance by round</th><th>Shifts</th><th>Moved</th><th>Repeats</th>"
-        "<th>Sources</th><th>Unsupported</th></tr></thead><tbody>"
+        "<th>Sources</th><th>Unsupported</th><th>Steelman</th></tr></thead><tbody>"
     )
     for a in card["agents"]:
         by_round = " → ".join(s or "-" for s in a["stances"]) or "-"
@@ -149,7 +149,7 @@ def render_replay(t: dict) -> str:
         add(
             f"<tr><td>{e(a['name'])}</td><td>{e(by_round)}</td><td>{int(a['shifts'])}</td>"
             f"<td>{e(moved)}</td><td>{int(a['repeats'])}</td><td>{len(a['sources'])}</td>"
-            f"<td>{int(a['unsupported'])}</td></tr>"
+            f"<td>{int(a['unsupported'])}</td><td>{e(steelman_cell(a))}</td></tr>"
         )
     add("</tbody></table>")
     moved_names = ", ".join(card["moved"]) or "nobody"
@@ -165,6 +165,18 @@ def render_replay(t: dict) -> str:
         add("<ul>" + "".join(f"<li><strong>{e(name)}:</strong> {e(c)}</li>" for name, c in cited) + "</ul>")
     else:
         add('<p class="meta">No speaker cited a source.</p>')
+    add("<h3>Steelman</h3>")
+    if card["steelman_due"]:
+        add(f'<p class="meta">{int(card["steelmen"])} of {int(card["steelman_due"])} turn(s) from round 2 on stated '
+            "the other side's best argument in a STEELMAN: line. agora checks that the line is there, "
+            "not how good it is.</p>")
+        stated = [(a["name"], s) for a in card["agents"] for s in a["steelmen"]]
+        if stated:
+            add("<ul>" + "".join(
+                f"<li><strong>{e(name)}</strong> (round {int(s['round'])}): {e(s['text'])}</li>" for name, s in stated
+            ) + "</ul>")
+    else:
+        add('<p class="meta">A one-round debate asks for no steelman.</p>')
 
     # ── the debate itself ───────────────────────────────────────────────
     for r in rounds:

@@ -172,7 +172,7 @@ def test_scorecard_matches_the_report_numbers():
     page = render_replay(_transcript())
     section = page.split("<h2>Scorecard</h2>", 1)[1].split("<section", 1)[0]
     rows = re.findall(
-        r"<tr><td>(.*?)</td><td>(.*?)</td><td>(\d+)</td><td>(.*?)</td><td>(\d+)</td><td>(\d+)</td><td>(\d+)</td></tr>",
+        r"<tr><td>(.*?)</td><td>(.*?)</td><td>(\d+)</td><td>(.*?)</td><td>(\d+)</td><td>(\d+)</td><td>(\d+)</td><td>(.*?)</td></tr>",
         section,
     )
     assert [(name.startswith("Ada"), stances, shifts, moved) for name, stances, shifts, moved, *_ in rows] == [
@@ -194,7 +194,7 @@ def test_scorecard_shows_sources_and_unsupported_claims_like_the_report():
          "text": "Costs rose 12 billion [source: https://example.org/costs].\nPOSITION: I support it."},
     ], agent_configs=[{"name": "Bo"}], consensus_scores=[0.5, 0.5], interventions={})
     section = render_replay(t).split("<h2>Scorecard</h2>", 1)[1].split("<section", 1)[0]
-    row = re.search(r"<tr><td>Bo</td>(?:<td>.*?</td>){4}<td>(\d+)</td><td>(\d+)</td></tr>", section)
+    row = re.search(r"<tr><td>Bo</td>(?:<td>.*?</td>){4}<td>(\d+)</td><td>(\d+)</td><td>.*?</td></tr>", section)
     assert row and row.groups() == ("2", "1")  # two sources cited, the study sentence has none
     assert "Unsupported claims: 1 sentence(s)" in section
     evidence = section.split("<h3>Evidence</h3>", 1)[1]
@@ -212,3 +212,28 @@ def test_scorecard_counts_repeats_and_names_nobody_when_nobody_moved():
     section = render_replay(t).split("<h2>Scorecard</h2>", 1)[1]
     assert "Changed position: nobody." in section
     assert "Repeated arguments: 1 sentence(s)" in section
+
+
+def test_scorecard_shows_the_steelman_column_and_list_escaped():
+    t = _transcript(history=[
+        {"round": 1, "phase": "opening", "agent": "Bo", "text": "No.\nPOSITION: I oppose it."},
+        {"round": 2, "phase": "closing", "agent": "Bo",
+         "text": f"Still no.\nSTEELMAN: Ada says quiet streets {EVIL} save lives.\nPOSITION: I oppose it."},
+        {"round": 3, "phase": "closing", "agent": "Bo", "text": "No again.\nPOSITION: I oppose it."},
+    ], agent_configs=[{"name": "Bo"}], consensus_scores=[0.5, 0.5, 0.5], interventions={})
+    section = render_replay(t).split("<h2>Scorecard</h2>", 1)[1].split("<section", 1)[0]
+    row = re.search(r"<tr><td>Bo</td>(?:<td>.*?</td>){6}<td>(.*?)</td></tr>", section)
+    assert row and row.group(1) == "1/2"
+    steel = section.split("<h3>Steelman</h3>", 1)[1]
+    assert "1 of 2 turn(s) from round 2 on" in steel
+    assert steel.count("<li>") == 1 and "(round 2)" in steel
+    assert "<script" not in steel and "quiet streets &lt;script&gt;" in steel
+
+
+def test_one_round_replay_asks_for_no_steelman():
+    t = _transcript(history=[
+        {"round": 1, "phase": "opening", "agent": "Bo", "text": "No.\nPOSITION: I oppose it."},
+    ], agent_configs=[{"name": "Bo"}], consensus_scores=[0.5], interventions={})
+    section = render_replay(t).split("<h2>Scorecard</h2>", 1)[1].split("<section", 1)[0]
+    assert re.search(r"<tr><td>Bo</td>(?:<td>.*?</td>){6}<td>-</td></tr>", section)
+    assert "A one-round debate asks for no steelman." in section
