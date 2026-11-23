@@ -121,6 +121,12 @@ class Agent:
 
     def _build_system_prompt(self, round_num: int, total_rounds: int, phase: str) -> str:
         phase_instr = PHASE_INSTRUCTIONS.get(phase, PHASE_INSTRUCTIONS["rebuttal"])
+        steelman_rule = (
+            f"• Just before your POSITION sentence, write one sentence starting with 'STEELMAN: ' "
+            f"that states the strongest argument of a debater who disagrees with you, as they "
+            f"would put it, and name them.\n"
+            if round_num > 1 else ""
+        )
         return (
             f"You are '{self.name}' participating in a high-quality structured debate.\n"
             f"Your persona and perspective: {self.role}\n\n"
@@ -136,6 +142,7 @@ class Agent:
             f"• Back every figure, study or statistic with an inline citation in the form "
             f"[source: <publication, organisation or URL>]. If you cannot name one, say it is "
             f"your own estimate. Never invent a source.\n"
+            f"{steelman_rule}"
             f"• End every response with a single sentence starting with 'POSITION: ' that "
             f"states your current stance (e.g. 'POSITION: I strongly support X because Y.')."
         )

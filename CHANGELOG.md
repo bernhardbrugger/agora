@@ -7,6 +7,10 @@ reconstructed from the git history.
 ## [Unreleased]
 
 ### Added
+- Steelman check: from round 2 on, speakers are asked for one `STEELMAN:` sentence that states the other side's
+  strongest argument; the report's scorecard shows per speaker how many of those turns had one (`given/asked`) and
+  quotes them in a Steelman list. It checks presence, not quality. `STEELMAN:` lines do not count as repeats or
+  unsupported claims. The dry-run provider emits a placeholder steelman line.
 - Evidence in the report: speakers are told to cite figures, studies and statistics inline as `[source: ...]`; the
   scorecard counts each speaker's distinct sources and "unsupported" sentences (a figure or a study/statistic cue
   without a citation), and an Evidence list names what was cited. Sources are listed as claimed, never checked.

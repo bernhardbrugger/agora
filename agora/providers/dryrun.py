@@ -60,10 +60,14 @@ class DryRunProvider(LLMProvider):
         label = phase_match.group(1) if phase_match else "Rebuttal"
         round_num = phase_match.group(2) if phase_match else "?"
         stance = self._stance(name, label)
+        steelman = (
+            "STEELMAN: [dry run] the other side's strongest argument goes here.\n"
+            if "STEELMAN: " in system else ""
+        )
         return (
             f"[dry run] {name}, {label.lower()} in round {round_num}. "
             f'This is canned text: no model was called for "{topic}".\n\n'
-            f"POSITION: I {stance} it."
+            f"{steelman}POSITION: I {stance} it."
         )
 
     def stream(self, system: str, messages: list[dict], max_tokens: int = 1024) -> Iterator[str]:

@@ -17,11 +17,17 @@ good argument or by a bad one.
   in millions or billions, a multiple) or lean on a study, survey, report or
   statistic, with no ``[source: ...]`` in the same sentence. This is a word
   pattern, not fact checking: a claim phrased without such words is missed.
+* **Steelman** counts the turns from round 2 on in which a speaker stated the
+  best argument of the other side in a ``STEELMAN:`` line, out of the turns
+  where one was asked for. agora checks that the line is there, not how good
+  it is. ``POSITION:`` and ``STEELMAN:`` lines never count as repeats or as
+  unsupported claims (a steelman restates the other side).
 """
 
 from __future__ import annotations
 
 import re
+from typing import Optional
 
 REPEAT_MIN_WORDS = 8
 REPEAT_OVERLAP = 0.8
@@ -35,6 +41,8 @@ _CLAIM = re.compile(
     r"|data (?:shows?|suggests?)|reports? (?:that|shows?|found))\b",
     re.I,
 )
+# "STEELMAN: ..." at the start of a line, also with Markdown emphasis such as "**STEELMAN:** ..."
+_STEELMAN = re.compile(r"^[ \t*_>]*STEELMAN[ \t*_]*:[ \t*_]*(.*?)[ \t*_]*$", re.I | re.M)
 
 
 def stance(polarity: float) -> str:
@@ -47,8 +55,20 @@ def stance(polarity: float) -> str:
 
 
 def _body(text: str) -> str:
-    """The turn without its POSITION line."""
-    return "\n".join(line for line in text.splitlines() if not line.strip().upper().startswith("POSITION:"))
+    """The turn without its POSITION and STEELMAN lines."""
+    return "\n".join(
+        line for line in text.splitlines()
+        if not line.strip().upper().startswith("POSITION:") and not _STEELMAN.match(line)
+    )
+
+
+def steelman(text: str) -> Optional[str]:
+    """The text of the first non-empty ``STEELMAN:`` line of a turn, or None."""
+    for match in _STEELMAN.finditer(text):
+        said = " ".join(match.group(1).split())
+        if said:
+            return said
+    return None
 
 
 def sources(text: str) -> list[str]:
@@ -85,7 +105,10 @@ def _overlap(a: frozenset[str], b: frozenset[str]) -> float:
 
 
 def _row(name: str) -> dict:
-    return {"name": name, "stances": [], "shifts": 0, "repeats": 0, "sources": [], "unsupported": 0}
+    return {
+        "name": name, "stances": [], "shifts": 0, "repeats": 0, "sources": [], "unsupported": 0,
+        "steelman_due": 0, "steelmen": [],
+    }
 
 
 def build_scorecard(transcript: dict) -> dict:
@@ -105,6 +128,11 @@ def build_scorecard(transcript: dict) -> dict:
             text = turn.get("text", "")
             row["sources"] += [c for c in sources(text) if c not in row["sources"]]
             row["unsupported"] += unsupported(text)
+            if rnd.get("number", 1) > 1:
+                row["steelman_due"] += 1
+                said_steelman = steelman(text)
+                if said_steelman:
+                    row["steelmen"].append({"round": rnd["number"], "text": said_steelman})
 
     for row in rows.values():
         stated = [s for s in row["stances"] if s is not None]
@@ -119,7 +147,14 @@ def build_scorecard(transcript: dict) -> dict:
         "moved": [a["name"] for a in agents if a["moved"]],
         "repeats": sum(a["repeats"] for a in agents),
         "unsupported": sum(a["unsupported"] for a in agents),
+        "steelman_due": sum(a["steelman_due"] for a in agents),
+        "steelmen": sum(len(a["steelmen"]) for a in agents),
     }
+
+
+def steelman_cell(agent: dict) -> str:
+    """``given/asked`` for one speaker, ``-`` when no steelman was asked for (a one-round debate)."""
+    return f"{len(agent['steelmen'])}/{agent['steelman_due']}" if agent["steelman_due"] else "-"
 
 
 def scorecard_markdown(scorecard: dict) -> str:
@@ -129,13 +164,13 @@ def scorecard_markdown(scorecard: dict) -> str:
         "",
         "Computed from the transcript, no model involved. It scores the debate, not the truth of the topic.",
         "",
-        "| Agent | Stance by round | Shifts | Moved | Repeats | Sources | Unsupported |",
-        "|-------|-----------------|--------|-------|---------|---------|-------------|",
+        "| Agent | Stance by round | Shifts | Moved | Repeats | Sources | Unsupported | Steelman |",
+        "|-------|-----------------|--------|-------|---------|---------|-------------|----------|",
     ]
     for a in scorecard["agents"]:
         by_round = " → ".join(s or "-" for s in a["stances"]) or "-"
         moved = f"yes ({a['opening']} → {a['closing']})" if a["moved"] else "no"
-        lines.append(f"| {a['name']} | {by_round} | {a['shifts']} | {moved} | {a['repeats']} | {len(a['sources'])} | {a['unsupported']} |")
+        lines.append(f"| {a['name']} | {by_round} | {a['shifts']} | {moved} | {a['repeats']} | {len(a['sources'])} | {a['unsupported']} | {steelman_cell(a)} |")
     lines.append("")
     if scorecard["moved"]:
         lines.append(f"**Changed position:** {', '.join(scorecard['moved'])}.")
@@ -159,4 +194,16 @@ def scorecard_markdown(scorecard: dict) -> str:
         lines += [f"- **{name}:** {c}" for name, c in cited]
     else:
         lines.append("No speaker cited a source.")
+    lines += ["", "### Steelman", ""]
+    if scorecard["steelman_due"]:
+        lines.append(
+            f"{scorecard['steelmen']} of {scorecard['steelman_due']} turn(s) from round 2 on stated the other side's "
+            "best argument in a `STEELMAN:` line. agora checks that the line is there, not how good it is."
+        )
+        stated = [(a["name"], s) for a in scorecard["agents"] for s in a["steelmen"]]
+        if stated:
+            lines.append("")
+            lines += [f"- **{name}** (round {s['round']}): {s['text']}" for name, s in stated]
+    else:
+        lines.append("A one-round debate asks for no steelman.")
     return "\n".join(lines)

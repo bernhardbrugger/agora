@@ -6,7 +6,7 @@ import pytest
 from click.testing import CliRunner
 
 from agora.cli import cli
-from agora.scorecard import build_scorecard, scorecard_markdown, sources, stance, unsupported
+from agora.scorecard import build_scorecard, scorecard_markdown, sources, stance, steelman, unsupported
 
 LONG = "Rates matter more than earnings for long duration assets in every cycle we have seen."
 
@@ -169,3 +169,67 @@ def test_dry_run_report_ends_with_the_scorecard(tmp_path):
     assert report.index("# Moderator Synthesis") < report.index("## Scorecard")
     # the canned speakers alternate support/oppose and all close on support
     assert "**Changed position:**" in report and "nobody" not in report.split("## Scorecard")[1]
+
+
+@pytest.mark.parametrize("line", [
+    "STEELMAN: Ben is right that fares alone cannot fund the network.",
+    "**STEELMAN:** Ben is right that fares alone cannot fund the network.",
+    "  steelman: Ben is right that fares alone cannot fund the network.  ",
+])
+def test_steelman_line_is_found_with_or_without_emphasis(line):
+    text = f"My argument stands.\n\n{line}\nPOSITION: I support it."
+    assert steelman(text) == "Ben is right that fares alone cannot fund the network."
+
+
+def test_no_steelman_line_or_an_empty_one_is_none():
+    assert steelman("I steelman nobody here.\nPOSITION: I support it.") is None
+    assert steelman("STEELMAN:\nPOSITION: I support it.") is None
+
+
+def test_steelman_is_counted_from_round_two_per_speaker():
+    t = _transcript()
+    # round 1 has no steelman to ask for; one given in round 1 is not counted
+    t["rounds"][0]["turns"][0]["text"] = "STEELMAN: early.\n" + t["rounds"][0]["turns"][0]["text"]
+    t["rounds"][1]["turns"][0]["text"] = (
+        "Something new.\nSTEELMAN: Ben fears 40% fare hikes.\nPOSITION: I oppose it."
+    )
+    sc = build_scorecard(t)
+    ana, ben = sc["agents"]
+    assert (ana["steelman_due"], ana["steelmen"]) == (2, [{"round": 2, "text": "Ben fears 40% fare hikes."}])
+    assert (ben["steelman_due"], ben["steelmen"]) == (2, [])
+    assert (sc["steelman_due"], sc["steelmen"]) == (4, 1)
+    # the steelman restates the other side: not Ana's own unsupported claim
+    assert ana["unsupported"] == 0
+    md = scorecard_markdown(sc)
+    # round 2 now says something new, so Ana has no repeat any more
+    assert "| Ana | for → against → against | 1 | yes (for → against) | 0 | 0 | 0 | 1/2 |" in md
+    assert "| Ben | against → - → against | 0 | no | 0 | 0 | 0 | 0/2 |" in md
+    assert "1 of 4 turn(s) from round 2 on" in md
+    assert "- **Ana** (round 2): Ben fears 40% fare hikes." in md
+
+
+def test_a_repeated_steelman_is_not_a_repeat():
+    line = "STEELMAN: Ana says rates matter more than earnings for every long duration asset we hold."
+    t = {
+        "agents": [{"name": "Cy", "role": ""}],
+        "rounds": [{"number": n, "turns": [_turn("Cy", f"Short.\n{line}\nPOSITION: I oppose it.", "x", -1.0)]}
+                   for n in (1, 2, 3)],
+    }
+    assert build_scorecard(t)["agents"][0]["repeats"] == 0
+
+
+def test_one_round_asks_for_no_steelman():
+    t = _transcript()
+    t["rounds"] = t["rounds"][:1]
+    md = scorecard_markdown(build_scorecard(t))
+    assert "| - |" in md.splitlines()[6]
+    assert "A one-round debate asks for no steelman." in md
+
+
+def test_speakers_are_asked_for_a_steelman_from_round_two():
+    from agora.agent import Agent
+    from agora.providers.dryrun import DryRunProvider
+
+    agent = Agent("Ana", "a sceptic", provider=DryRunProvider())
+    assert "STEELMAN: " not in agent._build_system_prompt(1, 3, "opening")
+    assert "'STEELMAN: '" in agent._build_system_prompt(2, 3, "rebuttal")

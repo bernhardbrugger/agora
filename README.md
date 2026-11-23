@@ -238,11 +238,11 @@ same for every provider. It scores the debate, not the truth of the topic. Outpu
 canned speakers repeat their placeholder sentence, which the scorecard counts):
 
 ```text
-| Agent | Stance by round | Shifts | Moved | Repeats | Sources | Unsupported |
-|-------|-----------------|--------|-------|---------|---------|-------------|
-| The Analyst | for → for → for | 0 | no | 2 | 0 | 0 |
-| The Pragmatist | against → against → for | 1 | yes (against → for) | 2 | 0 | 0 |
-| The Devil's Advocate | for → for → for | 0 | no | 2 | 0 | 0 |
+| Agent | Stance by round | Shifts | Moved | Repeats | Sources | Unsupported | Steelman |
+|-------|-----------------|--------|-------|---------|---------|-------------|----------|
+| The Analyst | for → for → for | 0 | no | 2 | 0 | 0 | 2/2 |
+| The Pragmatist | against → against → for | 1 | yes (against → for) | 2 | 0 | 0 | 2/2 |
+| The Devil's Advocate | for → for → for | 0 | no | 2 | 0 | 0 | 2/2 |
 
 **Changed position:** The Pragmatist.
 
@@ -253,6 +253,17 @@ canned speakers repeat their placeholder sentence, which the scorecard counts):
 ### Evidence
 
 No speaker cited a source.
+
+### Steelman
+
+6 of 6 turn(s) from round 2 on stated the other side's best argument in a `STEELMAN:` line. agora checks that the line is there, not how good it is.
+
+- **The Analyst** (round 2): [dry run] the other side's strongest argument goes here.
+- **The Analyst** (round 3): [dry run] the other side's strongest argument goes here.
+- **The Pragmatist** (round 2): [dry run] the other side's strongest argument goes here.
+- **The Pragmatist** (round 3): [dry run] the other side's strongest argument goes here.
+- **The Devil's Advocate** (round 2): [dry run] the other side's strongest argument goes here.
+- **The Devil's Advocate** (round 3): [dry run] the other side's strongest argument goes here.
 ```
 
 The stance comes from each turn's `POSITION:` line (`-` when it is missing; that round is not counted as a change of
@@ -266,6 +277,12 @@ billions or a multiple, or lean on a study, survey, report or statistic, without
 agora does not open or check a cited source, and a model can invent one: treat the list as "what was claimed", not
 "what is true". The replay page shows the same Sources and Unsupported columns and the Evidence list, each cited
 source as plain text (a cited URL is never turned into a link).
+
+From round 2 on, every speaker is asked to state, just before its `POSITION:` sentence, the strongest argument of
+someone who disagrees with it, in one sentence starting with `STEELMAN:`. **Steelman** shows how many of those turns
+had the line (`2/2`; `-` in a one-round debate), and the Steelman list quotes them. agora checks that the line is
+there, not whether it is fair or the other side's real best point: read the list to judge that. `STEELMAN:` lines are
+left out of Repeats and Unsupported, because they restate the other side.
 
 ---
 
@@ -415,7 +432,7 @@ Agora is a small hobby project. Know what you are getting:
 - **Tests cover the logic, not the models.** CI runs `pytest` on Linux and Windows (Python 3.9 and 3.13): phases, consensus scoring, presets, reports and the `run` command end to end through `--dry-run`. No test calls a real provider, so the provider code (API calls, retries, model IDs) is only checked by running debates by hand.
 - **Install from source only.** It is not on PyPI. Presets are read from the repo's `personas/` folder, so use the editable install (`pip install -e .`) shown above.
 - **Model aliases are pinned to 2025 model IDs** (for example `sonnet` → `claude-sonnet-4-20250514`, `flash` → `gemini-2.0-flash`). Providers retire models; if an alias fails, pass a current full model ID with `--model`. Gemini support uses the older `google-generativeai` SDK.
-- **The scorecard reads words, not meaning.** A stance comes from simple word matching on the `POSITION:` line, and a repeat is word overlap, so a paraphrased argument is not caught. "Unsupported" is a word pattern too: it misses claims phrased without a figure or a study word, and cited sources are listed, never checked. Steelman checks and unresolved cruxes are not scored yet.
+- **The scorecard reads words, not meaning.** A stance comes from simple word matching on the `POSITION:` line, and a repeat is word overlap, so a paraphrased argument is not caught. "Unsupported" is a word pattern too: it misses claims phrased without a figure or a study word, and cited sources are listed, never checked. The steelman check only sees whether a `STEELMAN:` line is there, not whether it is fair, and the replay page does not show it yet. Unresolved cruxes are not scored yet.
 - **The consensus meter is a rough heuristic.** It combines keyword overlap with simple word matching on each agent's `POSITION:` line. It does not understand meaning and can misread negations.
 - **Every agent is the same underlying model** playing a role. Debates can converge because of that, not because an argument won.
 - **Personas are archetypes, not real people.** The presets describe styles of thinking (for example the value investor or the crisis leader). They deliberately do not name or imitate real people, living or dead; before 2026-11-16 four presets did, and they were replaced for that reason. Your own presets should follow the same rule.
