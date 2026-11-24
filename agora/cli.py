@@ -296,6 +296,26 @@ def list_formats_cmd() -> None:
         console.print()
 
 
+@cli.command(name="mcp")
+@click.option(
+    "--output", default=None, metavar="DIR",
+    help="Where debates started over MCP save their files (default: ~/agora-reports).",
+)
+def mcp_cmd(output: Optional[str]) -> None:
+    """Serve agora over MCP (stdio) so Claude Desktop or another client can start debates."""
+    if sys.version_info < (3, 10):
+        console.print("[bold red]Error:[/bold red] the MCP server needs Python 3.10 or newer.")
+        sys.exit(1)
+    try:
+        import mcp  # noqa: F401
+    except ImportError:
+        console.print('[bold red]Missing dependency:[/bold red] pip install "agora-debate[mcp]"')
+        sys.exit(1)
+    from agora.mcp_server import DEFAULT_OUTPUT, serve
+
+    serve(output or DEFAULT_OUTPUT)
+
+
 @cli.command(name="providers")
 def list_providers_cmd() -> None:
     """List available LLM providers and their models."""

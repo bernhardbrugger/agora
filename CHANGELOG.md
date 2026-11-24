@@ -7,6 +7,12 @@ reconstructed from the git history.
 ## [Unreleased]
 
 ### Added
+- MCP server: `agora mcp [--output DIR]` serves agora over stdio with the tools `list_presets`, `list_formats` and
+  `run_debate`, so Claude Desktop or another MCP client can start a debate (preset, format or agents; any provider or
+  `dry_run`) and gets the report with the paths of report, transcript and replay page. Files go to `~/agora-reports`
+  by default; the debate's terminal output goes to stderr so stdout stays the protocol channel. What the CLI asks to
+  confirm (more than 12 rounds, more than 8 speakers) is refused over MCP. Optional extra `agora-debate[mcp]`
+  (Python 3.10+); a test runs a debate through a real stdio connection.
 - Evidence from an MCP server: `agora run --mcp-server "CMD" --mcp-call 'TOOL {JSON}'` (repeatable) starts a local
   stdio MCP server, calls each named tool once before round 1 and turns every result into the next evidence card
   (`mcp: TOOL {args}`), numbered after the `--evidence` files and limited by the same 20 cards and 4,000 characters.

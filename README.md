@@ -353,6 +353,55 @@ with the tool's own message. Tool output is untrusted data like a file card: fen
 
 ---
 
+## 🔌 Use it from Claude Desktop (MCP server)
+
+`agora mcp` serves agora over MCP (stdio), so Claude Desktop or any other MCP client can start a debate and read the
+report. Needs the optional MCP SDK (Python 3.10+): `pip install -e ".[mcp]"` in your clone. Add it to
+`claude_desktop_config.json` (use the full path to `agora`, or to `python` with `"args": ["-m", "agora", "mcp"]`, if
+the client does not find it):
+
+```json
+{
+  "mcpServers": {
+    "agora": { "command": "agora", "args": ["mcp", "--output", "/path/to/agora-reports"] }
+  }
+}
+```
+
+Three tools:
+
+| Tool | What it does |
+|---|---|
+| `list_presets` | the persona presets and their speakers |
+| `list_formats` | the formats (committee, court, redteam) with roles, rounds and disclaimer |
+| `run_debate` | `topic` plus `preset`, `format` or `agents`, and optional `rounds`, `provider`, `model`, `dry_run`, `replay`; runs the debate and returns the paths, then the full Markdown report |
+
+A `run_debate` call with `{"topic": "Should cities ban cars?", "format": "redteam", "dry_run": true}` returns (paths
+shortened):
+
+```text
+Report: ...\agora-reports\debate_should_cities_ban_cars_20261124_125346.md
+Transcript: ...\agora-reports\debate_should_cities_ban_cars_20261124_125346.json
+Replay: ...\agora-reports\debate_should_cities_ban_cars_20261124_125346.html
+
+# Debate: Should cities ban cars?
+
+**Date:** 2026-11-24 12:53
+**Format:** Red Team Review
+**Rounds:** 4
+**Provider:** dryrun/canned
+```
+
+The server reads API keys from its own environment (set them in the client's `env` block for the server, or in a
+`.env` file in the directory the client starts it in); without a key only `dry_run` works, and the tool says which
+key is missing. Files go to `--output` (default `~/agora-reports`), because desktop clients often start servers in a
+directory you never look at. The debate's terminal output goes to stderr, the client's server log. There is no way to
+confirm over MCP, so what the CLI asks about is refused: more than 12 rounds or more than 8 speakers. Evidence cards
+(`--evidence`, `--mcp-call`) are CLI only for now. A real debate makes several model calls per round and can take
+minutes, so check your client's tool-call timeout before a long one.
+
+---
+
 ## 📋 Presets
 
 | Preset | Agents | Best For |
