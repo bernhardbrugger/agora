@@ -128,3 +128,20 @@ def test_an_unusable_evidence_file_stops_the_run_before_any_report(tmp_path):
     assert result.exit_code == 1
     assert "is empty" in result.output
     assert not out.exists()
+
+
+def test_cards_from_texts_number_cut_and_mark_truncation():
+    from agora.evidence import MAX_CARD_CHARS, cards_from_texts
+
+    cards = cards_from_texts(["  short  ", "y" * (MAX_CARD_CHARS + 5)])
+    assert [c["id"] for c in cards] == ["E1", "E2"]
+    assert cards[0]["text"] == "short" and not cards[0]["truncated"]
+    assert len(cards[1]["text"]) == MAX_CARD_CHARS and cards[1]["truncated"]
+    assert cards_from_texts([]) == []
+
+
+def test_cards_from_texts_refuse_non_text():
+    from agora.evidence import EvidenceError, cards_from_texts
+
+    with pytest.raises(EvidenceError, match="item 1"):
+        cards_from_texts([{"text": "x"}])

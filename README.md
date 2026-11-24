@@ -374,7 +374,9 @@ Three tools:
 |---|---|
 | `list_presets` | the persona presets and their speakers |
 | `list_formats` | the formats (committee, court, redteam) with roles, rounds and disclaimer |
-| `run_debate` | `topic` plus `preset`, `format` or `agents`, and optional `rounds`, `provider`, `model`, `dry_run`, `replay`; runs the debate and returns the paths, then the full Markdown report |
+| `run_debate` | `topic` plus `preset`, `format` or `agents`, and optional `rounds`, `provider`, `model`, `dry_run`, `replay`, `evidence`; runs the debate and returns the paths, then the full Markdown report |
+
+`evidence` is a list of up to 20 texts (facts, excerpts, results of other tools the client already has) that become evidence cards `E1`, `E2`, ..., exactly like `agora run --evidence` files: every speaker gets them, each is cut at 4,000 characters, and the report lists them as `` `E1` `from the MCP client, item 1` (45 characters) ``.
 
 A `run_debate` call with `{"topic": "Should cities ban cars?", "format": "redteam", "dry_run": true}` returns (paths
 shortened):

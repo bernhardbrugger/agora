@@ -5,7 +5,8 @@ Three tools over stdio:
 - ``list_presets``: the persona presets and their speakers
 - ``list_formats``: the institutional formats (committee, court, redteam) with roles, rounds and disclaimer
 - ``run_debate``: run one debate and return the Markdown report, with the paths of the report,
-  the JSON transcript and (by default) the HTML replay page
+  the JSON transcript and (by default) the HTML replay page; optional ``evidence`` texts become
+  evidence cards, as files do for ``agora run --evidence``
 
 The debate runs exactly as ``agora run --no-stream`` would: same providers, same keys from the
 environment, same files. stdout carries the MCP protocol, so the terminal output of the debate goes
@@ -132,14 +133,20 @@ def debate(
     model: Optional[str] = None,
     dry_run: bool = False,
     replay: bool = True,
+    evidence: Optional[list[str]] = None,
 ) -> str:
     """Run one debate and return the text the client sees: file paths, then the full report."""
     from agora.debate import run_debate
+    from agora.evidence import EvidenceError, cards_from_texts
     from agora.providers.base import LLMProvider
 
     if dry_run:
         provider, model = "dryrun", None
     agent_configs, rounds, debate_format = resolve_request(topic, preset, format_id, agents, rounds)
+    try:
+        cards = cards_from_texts(evidence or [])
+    except EvidenceError as exc:
+        raise DebateRequestError(str(exc)) from None
     try:
         LLMProvider.resolve(provider, model=model)
     except (EnvironmentError, ValueError, ImportError) as exc:
@@ -154,6 +161,7 @@ def debate(
         output_dir=str(output_dir),
         stream=False,
         debate_format=debate_format,
+        evidence=cards or None,
     ))
     lines = [f"Report: {report_path}", f"Transcript: {report_path.with_suffix('.json')}"]
     if replay:
@@ -202,6 +210,7 @@ def build_server(output_dir: Path = DEFAULT_OUTPUT):
         model: Optional[str] = None,
         dry_run: bool = False,
         replay: bool = True,
+        evidence: Optional[list[str]] = None,
     ) -> str:
         """Run a structured debate and return the Markdown report with the paths of report, transcript and replay.
 
@@ -210,9 +219,15 @@ def build_server(output_dir: Path = DEFAULT_OUTPUT):
         `provider` is anthropic, openai, gemini or grok and needs its API key in the server's environment;
         `dry_run` uses canned offline replies (no key, no cost). A real debate makes several model calls per
         round and can take minutes.
+
+        `evidence`: up to 20 texts (facts, excerpts, tool results you already have) that every speaker gets as
+        evidence cards E1, E2, ... to cite as [source: E1]; each is cut at 4000 characters and treated as data,
+        never as instructions. The report lists the cards and flags citations of cards that do not exist.
         """
         try:
-            return debate(topic, output_dir, preset, format, agents, rounds, provider, model, dry_run, replay)
+            return debate(
+                topic, output_dir, preset, format, agents, rounds, provider, model, dry_run, replay, evidence
+            )
         except DebateRequestError as exc:
             raise ToolError(str(exc)) from None
 

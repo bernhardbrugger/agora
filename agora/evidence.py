@@ -48,6 +48,28 @@ def load_evidence(paths: Iterable[str | Path]) -> list[dict]:
     return cards
 
 
+def cards_from_texts(texts: Iterable[str]) -> list[dict]:
+    """Cards from text an MCP client passes to ``run_debate`` (``agora mcp``).
+
+    Same ids, limits and cut as file cards; the title says where the text came from.
+    """
+    texts = list(texts)
+    if len(texts) > MAX_CARDS:
+        raise EvidenceError(f"at most {MAX_CARDS} evidence cards, got {len(texts)}")
+    cards: list[dict] = []
+    for number, raw in enumerate(texts, start=1):
+        text = raw.strip() if isinstance(raw, str) else ""
+        if not text:
+            raise EvidenceError(f"evidence item {number} is empty or not text")
+        cards.append({
+            "id": f"E{number}",
+            "title": f"from the MCP client, item {number}",
+            "text": text[:MAX_CARD_CHARS],
+            "truncated": len(text) > MAX_CARD_CHARS,
+        })
+    return cards
+
+
 def evidence_block(cards: list[dict]) -> str:
     """The cards as prompt text, each fenced so a card cannot pass for the transcript."""
     if not cards:

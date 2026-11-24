@@ -117,3 +117,46 @@ def test_a_client_runs_a_debate_over_stdio(tmp_path):
 def test_a_refused_request_reaches_the_client_as_a_tool_error(tmp_path):
     with pytest.raises(Exception, match="either preset or format"):
         load_mcp_evidence(_server(tmp_path), ['run_debate {"topic": "T", "preset": "investment_styles", "format": "committee"}'])
+
+
+# ── evidence texts from the client ──
+
+def test_evidence_texts_become_cards_in_report_and_transcript(tmp_path):
+    text = debate(
+        "Lower the voting age?", tmp_path, agents="2", rounds=2, dry_run=True,
+        evidence=["Austria lowered the voting age to 16 in 2007.", "  Turnout of first-time voters  "],
+    )
+    head, _, report = text.partition("\n\n")
+    transcript = json.loads(Path(dict(l.split(": ", 1) for l in head.splitlines())["Transcript"]).read_text("utf-8"))
+    assert [(c["id"], c["text"]) for c in transcript["evidence"]] == [
+        ("E1", "Austria lowered the voting age to 16 in 2007."),
+        ("E2", "Turnout of first-time voters"),
+    ]
+    assert transcript["evidence"][0]["title"] == "from the MCP client, item 1"
+    assert "- `E1` `from the MCP client, item 1` (45 characters)" in report
+    assert "- `E2` `from the MCP client, item 2` (28 characters)" in report
+
+
+def test_without_evidence_the_transcript_has_no_cards(tmp_path):
+    head, _, _ = debate("Topic", tmp_path, agents="2", rounds=2, dry_run=True, evidence=[]).partition("\n\n")
+    transcript = json.loads(Path(dict(l.split(": ", 1) for l in head.splitlines())["Transcript"]).read_text("utf-8"))
+    assert not transcript.get("evidence")
+
+
+@pytest.mark.parametrize("evidence, message", [
+    (["fine", "   "], "evidence item 2 is empty"),
+    (["x"] * 21, "at most 20 evidence cards"),
+])
+def test_bad_evidence_is_refused_before_anything_is_written(tmp_path, evidence, message):
+    with pytest.raises(DebateRequestError, match=message):
+        debate("Topic", tmp_path, agents="2", rounds=2, dry_run=True, evidence=evidence)
+    assert not list(tmp_path.iterdir())
+
+
+@needs_mcp
+def test_a_client_passes_evidence_over_stdio(tmp_path):
+    call = json.dumps({"topic": "T", "agents": "2", "rounds": 2, "dry_run": True, "evidence": ["Card text 42"]})
+    (result,) = load_mcp_evidence(_server(tmp_path), [f"run_debate {call}"])
+    transcript = json.loads(next(tmp_path.glob("*.json")).read_text("utf-8"))
+    assert transcript["evidence"][0]["text"] == "Card text 42"
+    assert "- `E1` `from the MCP client, item 1` (12 characters)" in result["text"]
