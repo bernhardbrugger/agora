@@ -398,8 +398,9 @@ The server reads API keys from its own environment (set them in the client's `en
 `.env` file in the directory the client starts it in); without a key only `dry_run` works, and the tool says which
 key is missing. Files go to `--output` (default `~/agora-reports`), because desktop clients often start servers in a
 directory you never look at. The debate's terminal output goes to stderr, the client's server log. There is no way to
-confirm over MCP, so what the CLI asks about is refused: more than 12 rounds or more than 8 speakers. Evidence cards
-(`--evidence`, `--mcp-call`) are CLI only for now. A real debate makes several model calls per round and can take
+confirm over MCP, so what the CLI asks about is refused: more than 12 rounds or more than 8 speakers. Reading
+files (`--evidence`) and calling other MCP servers (`--mcp-call`) are CLI only; over MCP, pass the texts as `evidence`
+instead. A real debate makes several model calls per round and can take
 minutes, so check your client's tool-call timeout before a long one.
 
 ---
