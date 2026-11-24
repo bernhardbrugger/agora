@@ -1,7 +1,7 @@
 # Changelog
 
 All notable changes to agora. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-No version has been tagged or published to PyPI yet; the versions below are the ones set in `setup.py`,
+No version has been tagged or published to PyPI yet; the versions below are the ones set in `setup.py` (now `pyproject.toml`),
 reconstructed from the git history.
 
 ## [Unreleased]
@@ -66,6 +66,9 @@ reconstructed from the git history.
 - MIT `LICENSE` file (the README and `setup.py` already declared MIT).
 
 ### Changed
+- Package metadata moved from `setup.py` to `pyproject.toml` (PEP 621): Python 3.13 classifier, SPDX licence,
+  project links for issues and the changelog. `setup.py` stays as a one-line shim. The built wheel and sdist pass
+  `twine check`.
 - The presets that put words in the mouths of real people were replaced by archetypes:
   `investment_styles`, `tech_builders`, `statecraft`, `science_archetypes`.
 - README: a Limitations section, install instructions for the optional providers, and an honest
