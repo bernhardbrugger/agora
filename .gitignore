@@ -10,5 +10,6 @@ build/
 .venv/
 venv/
 reports/
+gallery/
 .mypy_cache/
 .pytest_cache/

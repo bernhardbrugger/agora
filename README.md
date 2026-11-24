@@ -534,6 +534,11 @@ agora replay ./my_reports/debate_topic_20261119_155605.json            # writes 
 agora run --topic "Topic" --preset neutral --replay                    # or write it right after the debate
 agora run --topic "Topic" --preset neutral --output ./my_reports
 
+# Sample gallery: one offline --dry-run replay per format (committee, court, redteam) and one preset, plus an
+# index.html linking them; static files that can be served as they are. The speeches are canned placeholder
+# text, so the pages show the layout, not real arguments (the index page says so).
+agora gallery --output ./gallery
+
 # Use custom agent names (each gets a generic analytical persona)
 agora run --topic "Should we raise prices?" --agents "CFO,Head of Sales,Customer Success Lead"
 

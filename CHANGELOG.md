@@ -7,6 +7,11 @@ reconstructed from the git history.
 ## [Unreleased]
 
 ### Added
+- Sample gallery: `agora gallery [--output DIR]` (default `gallery/`) runs one offline `--dry-run` debate per format
+  (committee, court, redteam with two evidence cards) and one preset, writes each replay page and an `index.html`
+  that links them. All static, same Content-Security-Policy and escaping as a replay page, terminal kept quiet while
+  the four debates run. The speeches are canned placeholder text; the index page says the pages show the layout,
+  not real arguments.
 - MCP server: `agora mcp [--output DIR]` serves agora over stdio with the tools `list_presets`, `list_formats` and
   `run_debate`, so Claude Desktop or another MCP client can start a debate (preset, format or agents; any provider or
   `dry_run`) and gets the report with the paths of report, transcript and replay page. Files go to `~/agora-reports`

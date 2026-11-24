@@ -20,7 +20,7 @@ than 3.9. On Windows, set `PYTHONIOENCODING=utf-8` when piping the output.
 
 | Path | What it is |
 |---|---|
-| `agora/cli.py` | Click commands `run`, `replay`, `presets`, `formats`, `providers`, `mcp` |
+| `agora/cli.py` | Click commands `run`, `replay`, `gallery`, `presets`, `formats`, `providers`, `mcp` |
 | `agora/debate.py` | rounds, phases, consensus score, dynamic termination |
 | `agora/evidence.py` | `--evidence`: local files as cards `E1`, `E2`, ... for every speaker; card text is untrusted data |
 | `agora/mcp_evidence.py` | `--mcp-server`/`--mcp-call`: one call per named tool of a local stdio MCP server before the debate, each result a card after the file cards; needs the optional `mcp` package (3.10+), tests use `tests/fake_mcp_server.py` |
@@ -29,6 +29,7 @@ than 3.9. On Windows, set `PYTHONIOENCODING=utf-8` when piping the output.
 | `agora/moderator.py` | moderator interventions (a bare `NONE` reply means "no intervention") |
 | `agora/providers/` | Anthropic, OpenAI, Gemini, Grok and the offline `dryrun` provider |
 | `agora/renderer.py` | terminal output and the Markdown report |
+| `agora/gallery.py` | `agora gallery`: one offline dry-run replay per sample in `SAMPLES` (every format, one preset) plus `index.html`; sample topics name no companies and no real persons; same CSP and escaping as a replay |
 | `agora/replay.py` | `agora replay`: transcript -> one static HTML page; every string escaped (model output is untrusted), a CSP that blocks all network loads, no external scripts, fonts or images |
 | `agora/scorecard.py` | the scorecard of the report and the replay page (stance shifts, repeated sentences, cited sources, unsupported claims, steelman and crux lines), computed from the transcript without a model |
 | `agora/transcript.py` | the JSON transcript written next to the report; schema in `docs/transcript.schema.json` (change both together, raise `schema_version` when a reader would break) |

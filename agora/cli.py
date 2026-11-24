@@ -263,6 +263,21 @@ def replay_cmd(transcript: str, output: Optional[str]) -> None:
     console.print(f"  [bold green]✓[/bold green] Replay saved: [underline]{path}[/underline]")
 
 
+@cli.command(name="gallery")
+@click.option(
+    "-o", "--output", default="gallery", show_default=True, metavar="DIR",
+    help="Directory for index.html and one replay page per sample.",
+)
+def gallery_cmd(output: str) -> None:
+    """Build the sample gallery offline: one dry-run replay per format and an index page."""
+    from agora.gallery import build_gallery
+
+    paths = build_gallery(output)
+    for path in paths:
+        console.print(f"  [bold green]✓[/bold green] {path}")
+    console.print("[dim]Speeches are canned --dry-run placeholder text; the pages show the layout.[/dim]")
+
+
 @cli.command(name="presets")
 def list_presets_cmd() -> None:
     """List all available persona presets with their participants."""
