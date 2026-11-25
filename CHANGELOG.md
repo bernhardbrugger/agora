@@ -86,6 +86,9 @@ reconstructed from the git history.
   account of what is tested.
 
 ### Fixed
+- Without the `mcp` package, `agora mcp`, `--mcp-server` and their help said `pip install "agora-debate[mcp]"`, a
+  name that is not on PyPI (the command failed, and anyone could register the name). They now say
+  `pip install "mcp>=1.2"`, which works however agora was installed.
 - A non-editable install (`pip install git+https://github.com/bernhardbrugger/agora`, later PyPI) found no presets,
   because they lived in a top-level `personas/` folder the wheel did not include. They now live in `agora/personas/`
   and ship as package data; a CI job builds the wheel, installs it outside the checkout and runs `agora presets`,

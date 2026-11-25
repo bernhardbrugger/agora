@@ -67,6 +67,21 @@ def test_a_server_without_a_call_stops_the_run(tmp_path):
     assert not list(tmp_path.iterdir())
 
 
+def test_without_the_mcp_package_the_hint_installs_mcp_itself(monkeypatch, tmp_path):
+    # None in sys.modules makes "import mcp" fail as if the package were missing.
+    monkeypatch.setitem(sys.modules, "mcp", None)
+    with pytest.raises(EvidenceError) as info:
+        load_mcp_evidence("srv", ["notes"])
+    # agora is not on PyPI: a hint with a package name of its own would fail or,
+    # once someone else takes the name, install a stranger's package.
+    assert 'pip install "mcp>=1.2"' in str(info.value)
+    assert "agora-debate" not in str(info.value)
+    if sys.version_info >= (3, 10):
+        result = CliRunner().invoke(cli, ["mcp", "--output", str(tmp_path)])
+        assert result.exit_code == 1
+        assert 'pip install "mcp>=1.2"' in result.output and "agora-debate" not in result.output
+
+
 # ── against a real stdio MCP server (tests/fake_mcp_server.py) ──
 
 needs_mcp = pytest.mark.skipif(

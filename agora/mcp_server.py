@@ -15,7 +15,7 @@ the CLI asks about (more than 12 rounds, more than 8 speakers) are hard limits h
 
 Files are written below the output directory given to ``agora mcp --output`` (default
 ``~/agora-reports``), because a desktop client often starts servers in a directory the user never
-looks at. Needs the optional ``mcp`` package (Python 3.10+): ``pip install "agora-debate[mcp]"``.
+looks at. Needs the optional ``mcp`` package (Python 3.10+): ``pip install "mcp>=1.2"``.
 """
 
 from __future__ import annotations

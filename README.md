@@ -334,7 +334,7 @@ that a cited card says what the speaker claims nor that the file is true.
 Cards can also come from the tools of a local MCP server (stdio), for example a parliament or market-data server.
 agora starts the server, calls each `--mcp-call` tool once with its JSON arguments before round 1, and turns every
 result into the next card, numbered after the `--evidence` files. The speakers only see the cards; they cannot call
-tools themselves. Needs the optional MCP SDK (Python 3.10+): `pip install "agora-debate[mcp]"`.
+tools themselves. Needs the optional MCP SDK (Python 3.10+): `pip install "mcp>=1.2"`.
 
 ```bash
 agora run --topic "Should Austria lower the voting age to 14?" --agents 2 --rounds 2 --dry-run \

@@ -96,7 +96,7 @@ def cli():
 )
 @click.option(
     "--mcp-server", "mcp_server", default=None, metavar="COMMAND",
-    help="Start this local MCP server (stdio) to fetch evidence cards with --mcp-call, e.g. \"python -m quantdesk mcp\". Needs: pip install \"agora-debate[mcp]\".",
+    help="Start this local MCP server (stdio) to fetch evidence cards with --mcp-call, e.g. \"python -m quantdesk mcp\". Needs: pip install \"mcp>=1.2\".",
 )
 @click.option(
     "--mcp-call", "mcp_calls", multiple=True, metavar="'TOOL {JSON}'",
@@ -324,7 +324,7 @@ def mcp_cmd(output: Optional[str]) -> None:
     try:
         import mcp  # noqa: F401
     except ImportError:
-        console.print('[bold red]Missing dependency:[/bold red] pip install "agora-debate[mcp]"')
+        console.print('[bold red]Missing dependency:[/bold red] pip install "mcp>=1.2"')
         sys.exit(1)
     from agora.mcp_server import DEFAULT_OUTPUT, serve
 

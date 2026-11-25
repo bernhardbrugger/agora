@@ -11,7 +11,7 @@ exactly the tools you name, once each.
 
 Like file cards, tool output is untrusted data: it is fenced in the prompt and
 escaped by every renderer. Needs the optional ``mcp`` package (Python 3.10+):
-``pip install "agora-debate[mcp]"``.
+``pip install "mcp>=1.2"``.
 """
 
 from __future__ import annotations
@@ -107,7 +107,7 @@ def load_mcp_evidence(server: str, call_specs: Iterable[str], first_number: int 
         import mcp  # noqa: F401
     except ImportError:
         raise EvidenceError(
-            'MCP evidence needs the mcp package (Python 3.10+): pip install "agora-debate[mcp]"'
+            'MCP evidence needs the mcp package (Python 3.10+): pip install "mcp>=1.2"'
         ) from None
     try:
         results = asyncio.run(asyncio.wait_for(_call_tools(argv, calls), CALL_TIMEOUT_SECONDS))
