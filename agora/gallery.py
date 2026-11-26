@@ -42,6 +42,11 @@ SAMPLES: list[dict] = [
         ],
     },
     {
+        "slug": "parliament",
+        "format": "parliament",
+        "topic": "A fictional bill: a four-day working week for all public-sector staff",
+    },
+    {
         "slug": "preset-tech-builders",
         "preset": "tech_builders",
         "rounds": 4,

@@ -99,6 +99,29 @@ def test_redteam_dry_run_writes_the_report(tmp_path):
     assert "## What Survived\nPlaceholder." in report
 
 
+def test_parliament_has_its_roles_disclaimer_and_record():
+    fmt = load_format("parliament")
+    assert [a["name"] for a in fmt["agents"]] == [
+        "The Sponsor", "The Opposition Spokesperson", "The Cross-Bench Member", "The Committee Rapporteur",
+    ]
+    assert "stand for no real party or politician" in fmt["disclaimer"]
+    assert "not a forecast of any real vote" in fmt["disclaimer"]
+    for heading in ("## Amendments", "## Simulated Vote", "## Minority Report"):
+        assert heading in fmt["synthesis"]
+    for agent in fmt["agents"]:
+        assert "never name, quote or impersonate a real party, politician or living person" in agent["role"]
+        assert "start the sentence with 'AMENDMENT: '" in agent["role"]
+
+
+def test_parliament_dry_run_writes_the_record(tmp_path):
+    result = _run(tmp_path, "--format", "parliament", "--topic", "A fictional bill: free public transport for students")
+    assert result.exit_code == 0, result.output
+    report = next(tmp_path.glob("debate_*.md")).read_text(encoding="utf-8")
+    assert "**Format:** Parliamentary Reading" in report
+    assert "> **Disclaimer:** Educational simulation of a parliamentary reading" in report
+    assert "## Minority Report\nPlaceholder." in report
+
+
 def test_rules_are_appended_and_colours_assigned():
     fmt = validate_format(_spec(rules="No names."), "t")
     assert fmt["agents"][0]["role"] == "ra\n\nRules of this format: No names."

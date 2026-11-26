@@ -373,7 +373,7 @@ Three tools:
 | Tool | What it does |
 |---|---|
 | `list_presets` | the persona presets and their speakers |
-| `list_formats` | the formats (committee, court, redteam) with roles, rounds and disclaimer |
+| `list_formats` | the formats (committee, court, redteam, parliament) with roles, rounds and disclaimer |
 | `run_debate` | `topic` plus `preset`, `format` or `agents`, and optional `rounds`, `provider`, `model`, `dry_run`, `replay`, `evidence`; runs the debate and returns the paths, then the full Markdown report |
 
 `evidence` is a list of up to 20 texts (facts, excerpts, results of other tools the client already has) that become evidence cards `E1`, `E2`, ..., exactly like `agora run --evidence` files: every speaker gets them, each is cut at 4,000 characters, and the report lists them as `` `E1` `from the MCP client, item 1` (45 characters) ``.
@@ -444,12 +444,14 @@ output. It is a YAML file in `agora/formats/` (the spec is at the top of `agora/
 | `committee` | The Bull, The Bear, The Risk Officer, The Quant, The Devil's Advocate | 4 (opening, rebuttal, cross-examination, closing) | The chair's decision memo: thesis, strongest case for and counter, risks, **dissent kept by name**, what would change our minds, unverified claims, an assessment of how the thesis held up |
 | `court` | The Prosecution, The Defence, The Expert Witness, The Juror | 4 (same phases) | The judge's judgment: the question and its elements, burden and standard of proof, findings per disputed issue, verdict, **minority opinion**, what would have changed the outcome, assumed facts and unverified law |
 | `redteam` | The Plan Owner, The Red Team Lead, The Pre-Mortem Analyst, The Mitigation Engineer | 4 (same phases) | The red-team report: the plan and its assumptions, top risks ranked (stated fact or speculation), assumptions that did not hold, mitigations with cost and remaining risk, **what survived**, tripwires, unverified claims |
+| `parliament` | The Sponsor, The Opposition Spokesperson, The Cross-Bench Member, The Committee Rapporteur | 4 (same phases) | The speaker's record of the reading: the bill, the case for and against, every amendment tabled (who moved it, the exact change, accepted or not), the **simulated vote** with each speaker's final position, the **minority report**, committee findings left open, unverified claims |
 
 ```bash
 agora formats
 agora run --format committee --topic "Is a broad index fund overvalued after a strong decade?"
 agora run --format court --topic "Did the fictional baker breach the contract by delivering the wedding cake a day late?"
 agora run --format redteam --topic "Should we keep all nightly backups in one cloud region?"
+agora run --format parliament --topic "A fictional bill: free public transport for students"
 ```
 
 ```text
@@ -466,6 +468,13 @@ writes a verdict that applies the burden of proof and keeps the minority
 opinion.
     The Prosecution, The Defence, The Expert Witness, The Juror
 
+  parliament — Parliamentary Reading (4 rounds)
+    A sponsor, the opposition, a cross-bench faction and a committee rapporteur
+read a bill; the speaker writes the record of amendments, the simulated vote 
+and the minority report.
+    The Sponsor, The Opposition Spokesperson, The Cross-Bench Member, The 
+Committee Rapporteur
+
   redteam — Red Team Review (4 rounds)
     A plan's owner defends it while a red team, a pre-mortem analyst and a
 mitigation engineer try to break it; the report ranks the risks and says what
@@ -480,7 +489,7 @@ for learning how arguments meet a burden of proof: use fictional or historic pub
 private persons; agents are told to mark assumed facts and not to present laws they are unsure of as real. It is not
 legal advice. The red-team review attacks a plan, product or decision before reality does: it critiques ideas, not
 people, and stays at design level (agents are told never to write exploit code or attack instructions, or to aim at a
-real system or person). `--format` cannot be combined with `--preset`, and the format fixes the number of rounds.
+real system or person). The parliamentary reading is a civics exercise: the factions are fictional, speakers are told never to name or impersonate a real party or politician and to mark each proposed change as `AMENDMENT:`, and the vote is a simulation inside the debate, not a forecast of any real vote. `--format` cannot be combined with `--preset`, and the format fixes the number of rounds.
 
 ---
 
@@ -535,7 +544,7 @@ agora replay ./my_reports/debate_topic_20261119_155605.json            # writes 
 agora run --topic "Topic" --preset neutral --replay                    # or write it right after the debate
 agora run --topic "Topic" --preset neutral --output ./my_reports
 
-# Sample gallery: one offline --dry-run replay per format (committee, court, redteam) and one preset, plus an
+# Sample gallery: one offline --dry-run replay per format (committee, court, redteam, parliament) and one preset, plus an
 # index.html linking them; static files that can be served as they are. The speeches are canned placeholder
 # text, so the pages show the layout, not real arguments (the index page says so).
 agora gallery --output ./gallery

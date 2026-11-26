@@ -3,7 +3,7 @@
 Three tools over stdio:
 
 - ``list_presets``: the persona presets and their speakers
-- ``list_formats``: the institutional formats (committee, court, redteam) with roles, rounds and disclaimer
+- ``list_formats``: the institutional formats (committee, court, redteam, parliament) with roles, rounds and disclaimer
 - ``run_debate``: run one debate and return the Markdown report, with the paths of the report,
   the JSON transcript and (by default) the HTML replay page; optional ``evidence`` texts become
   evidence cards, as files do for ``agora run --evidence``

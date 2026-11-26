@@ -7,6 +7,11 @@ reconstructed from the git history.
 ## [Unreleased]
 
 ### Added
+- `agora run --format parliament`: an educational parliamentary reading (sponsor, opposition spokesperson,
+  cross-bench member, committee rapporteur) of a bill. Speakers mark proposed changes as `AMENDMENT:`; the
+  speaker's record lists every amendment, a simulated vote with each speaker's final position and a minority
+  report. The factions are fictional: speakers are told never to name or impersonate a real party or politician,
+  and the disclaimer says the vote is not a forecast of any real vote. The sample gallery gets a page for it.
 - Sample gallery: `agora gallery [--output DIR]` (default `gallery/`) runs one offline `--dry-run` debate per format
   (committee, court, redteam with two evidence cards) and one preset, writes each replay page and an `index.html`
   that links them. All static, same Content-Security-Policy and escaping as a replay page, terminal kept quiet while

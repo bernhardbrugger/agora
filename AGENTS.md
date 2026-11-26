@@ -25,7 +25,7 @@ than 3.9. On Windows, set `PYTHONIOENCODING=utf-8` when piping the output.
 | `agora/evidence.py` | `--evidence`: local files as cards `E1`, `E2`, ... for every speaker; card text is untrusted data |
 | `agora/mcp_evidence.py` | `--mcp-server`/`--mcp-call`: one call per named tool of a local stdio MCP server before the debate, each result a card after the file cards; needs the optional `mcp` package (3.10+), tests use `tests/fake_mcp_server.py` |
 | `agora/mcp_server.py` | `agora mcp`: agora as a stdio MCP server (`list_presets`, `list_formats`, `run_debate`); request checks are plain functions testable without the SDK; terminal output is moved to stderr |
-| `agora/formats/` | debate formats (`committee.yaml`, `court.yaml`, `redteam.yaml`) and their loader; the YAML spec is in the module docstring |
+| `agora/formats/` | debate formats (`committee.yaml`, `court.yaml`, `redteam.yaml`, `parliament.yaml`) and their loader; the YAML spec is in the module docstring |
 | `agora/moderator.py` | moderator interventions (a bare `NONE` reply means "no intervention") |
 | `agora/providers/` | Anthropic, OpenAI, Gemini, Grok and the offline `dryrun` provider |
 | `agora/renderer.py` | terminal output and the Markdown report |
