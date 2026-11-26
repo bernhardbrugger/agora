@@ -1,4 +1,4 @@
-"""OpenAI and Gemini providers against fake SDK modules: no network, no key, no cost."""
+"""Anthropic, OpenAI and Gemini providers against fake SDK modules: no network, no key, no cost."""
 
 from __future__ import annotations
 
@@ -243,3 +243,37 @@ def test_gemini_stream_yields_text_and_skips_empty_chunks(genai_sdk):
     provider = _gemini()
     assert list(provider.stream("s", [])) == ["Hel", "lo"]
     assert provider.client.models.calls[0]["stream"] is True
+
+
+# ── fake anthropic SDK ───────────────────────────────────────────────────────
+
+@pytest.fixture
+def anthropic_sdk(monkeypatch):
+    sdk = types.ModuleType("anthropic")
+    sdk.calls = []
+
+    def create(**kwargs):
+        sdk.calls.append(kwargs)
+        return NS(content=[NS(text="ok")])
+
+    sdk.Anthropic = lambda **kw: NS(kwargs=kw, messages=NS(create=create))
+    monkeypatch.setitem(sys.modules, "anthropic", sdk)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+    return sdk
+
+
+@pytest.mark.parametrize(
+    "model, api_model",
+    [
+        (None, "claude-sonnet-5-5"),
+        ("Haiku", "claude-haiku-5-5"),
+        ("opus", "claude-opus-5-5"),
+        ("claude-fable-5-2", "claude-fable-5-2"),
+    ],
+)
+def test_anthropic_aliases_resolve_to_current_model_ids(anthropic_sdk, model, api_model):
+    from agora.providers.anthropic import AnthropicProvider
+
+    provider = AnthropicProvider(model=model)
+    assert provider.complete("s", [{"role": "user", "content": "hi"}]) == "ok"
+    assert anthropic_sdk.calls[0]["model"] == api_model

@@ -94,6 +94,10 @@ reconstructed from the git history.
   account of what is tested.
 
 ### Fixed
+- The default provider failed without `--model`: `sonnet` pointed to `claude-sonnet-4-20250514`, which Anthropic
+  retired on 2026-06-15 (requests answer 404); `haiku` and `opus` pointed to retired or unknown IDs as well. The
+  aliases now mean `claude-haiku-5-5`, `claude-sonnet-5-5` and `claude-opus-5-5`, read from Anthropic's model and
+  deprecation pages, not called live.
 - The default Gemini alias `flash` pointed to `gemini-2.0-flash`, which Google shut down on 2026-06-01, so
   `--provider gemini` failed without `--model`. `flash` now means `gemini-3.8-flash` (stable) and `pro` means
   `gemini-3.1-pro-preview` (Google lists no stable Pro model). The `thinking` alias is gone: its ID

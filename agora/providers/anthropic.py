@@ -7,10 +7,12 @@ from typing import Optional, Iterator
 
 from agora.providers.base import LLMProvider
 
+# Checked 2026-11-26 against Anthropic's model overview and deprecation pages: the earlier IDs
+# (claude-3-5-haiku-20241022, claude-sonnet-4-20250514, claude-opus-4-20250514) are retired and answer 404.
 MODELS = {
-    "haiku": "claude-3-5-haiku-20241022",
-    "sonnet": "claude-sonnet-4-20250514",
-    "opus": "claude-opus-4-0-20250514",
+    "haiku": "claude-haiku-5-5",
+    "sonnet": "claude-sonnet-5-5",
+    "opus": "claude-opus-5-5",
 }
 
 DEFAULT_MODEL = "sonnet"
