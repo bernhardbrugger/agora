@@ -82,6 +82,9 @@ reconstructed from the git history.
 - MIT `LICENSE` file (the README and `setup.py` already declared MIT).
 
 ### Changed
+- The Gemini provider runs on the Google Gen AI SDK (`google-genai`, extra `.[gemini]`) instead of
+  `google-generativeai`, which Google marks as deprecated. Rate-limit retries also recognise an HTTP 429 code,
+  and an answer without text (for example a blocked one) raises a clear error instead of returning nothing.
 - Package metadata moved from `setup.py` to `pyproject.toml` (PEP 621): Python 3.13 classifier, SPDX licence,
   project links for issues and the changelog. `setup.py` stays as a one-line shim. The built wheel and sdist pass
   `twine check`.

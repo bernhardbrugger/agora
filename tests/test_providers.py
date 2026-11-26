@@ -120,35 +120,51 @@ def test_openai_stream_yields_text_and_skips_empty_chunks(openai_sdk):
     assert call["messages"][0] == {"role": "system", "content": "s"}
 
 
-# ── fake google.generativeai SDK ─────────────────────────────────────────────
+# ── fake google.genai SDK (Google Gen AI SDK) ────────────────────────────────
 
-class FakeModel:
-    def __init__(self, model_id, outcomes):
-        self.model_id = model_id
+class FakeModels:
+    def __init__(self, outcomes):
         self.outcomes = outcomes
         self.calls = []
 
-    def generate_content(self, prompt, generation_config, stream=False):
-        self.calls.append({"prompt": prompt, "config": generation_config, "stream": stream})
+    def _next(self, stream, model, contents, config):
+        self.calls.append({"model": model, "contents": contents, "config": config, "stream": stream})
         outcome = self.outcomes.pop(0)
         if isinstance(outcome, Exception):
             raise outcome
-        if stream:
-            return iter(NS(text=t) for t in outcome)
-        return NS(text=outcome)
+        return outcome
+
+    def generate_content(self, *, model, contents, config):
+        return NS(text=self._next(False, model, contents, config))
+
+    def generate_content_stream(self, *, model, contents, config):
+        return iter(NS(text=t) for t in self._next(True, model, contents, config))
+
+
+class ApiError(Exception):
+    """Shaped like google.genai.errors.APIError: an HTTP status in .code."""
+
+    def __init__(self, code, message):
+        super().__init__(f"{code} {message}")
+        self.code = code
 
 
 @pytest.fixture
 def genai_sdk(monkeypatch):
-    sdk = types.ModuleType("google.generativeai")
+    sdk = types.ModuleType("google.genai")
     sdk.outcomes = ["ok"]
-    sdk.configured = []
-    sdk.configure = lambda **kw: sdk.configured.append(kw)
-    sdk.GenerativeModel = lambda model_id: FakeModel(model_id, sdk.outcomes)
+    sdk.clients = []
+
+    def client(**kw):
+        made = NS(kwargs=kw, models=FakeModels(sdk.outcomes))
+        sdk.clients.append(made)
+        return made
+
+    sdk.Client = client
     google = types.ModuleType("google")
-    google.generativeai = sdk
+    google.genai = sdk
     monkeypatch.setitem(sys.modules, "google", google)
-    monkeypatch.setitem(sys.modules, "google.generativeai", sdk)
+    monkeypatch.setitem(sys.modules, "google.genai", sdk)
     monkeypatch.setenv("GOOGLE_API_KEY", "test-key")
     monkeypatch.setattr("time.sleep", lambda s: sdk.__dict__.setdefault("slept", []).append(s))
     return sdk
@@ -164,17 +180,18 @@ def test_gemini_without_a_key_says_which_variable_is_missing(genai_sdk, monkeypa
     monkeypatch.delenv("GOOGLE_API_KEY")
     with pytest.raises(EnvironmentError, match="GOOGLE_API_KEY not set"):
         _gemini()
-    assert genai_sdk.configured == []
+    assert genai_sdk.clients == []
 
 
 @pytest.mark.parametrize(
     "model, api_model",
     [(None, "gemini-2.0-flash"), ("Pro", "gemini-2.0-pro"), ("gemini-2.5-flash", "gemini-2.5-flash")],
 )
-def test_gemini_configures_the_key_and_resolves_aliases(genai_sdk, model, api_model):
+def test_gemini_passes_the_key_and_resolves_aliases(genai_sdk, model, api_model):
     provider = _gemini(model)
-    assert genai_sdk.configured == [{"api_key": "test-key"}]
-    assert provider.model.model_id == api_model
+    assert [c.kwargs for c in genai_sdk.clients] == [{"api_key": "test-key"}]
+    provider.complete("s", [])
+    assert provider.client.models.calls[0]["model"] == api_model
 
 
 def test_gemini_folds_system_and_messages_into_one_prompt(genai_sdk):
@@ -185,30 +202,44 @@ def test_gemini_folds_system_and_messages_into_one_prompt(genai_sdk):
         max_tokens=50,
     )
     assert answer == "ok"
-    (call,) = provider.model.calls
-    assert call["prompt"] == "be brief\n\n\n\nUSER: hi\n\nASSISTANT: hello"
+    (call,) = provider.client.models.calls
+    assert call["contents"] == "be brief\n\n\n\nUSER: hi\n\nASSISTANT: hello"
     assert call["config"] == {"max_output_tokens": 50}
     assert call["stream"] is False
 
 
-@pytest.mark.parametrize("message", ["429 Resource has been exhausted (quota)", "Rate limit"])
-def test_gemini_retries_quota_and_rate_errors(genai_sdk, message):
-    genai_sdk.outcomes[:] = [RateLimited(message), "later"]
+@pytest.mark.parametrize(
+    "error",
+    [
+        RateLimited("Resource has been exhausted (quota)"),
+        RateLimited("Rate limit"),
+        ApiError(429, "RESOURCE_EXHAUSTED"),
+    ],
+)
+def test_gemini_retries_quota_and_rate_errors(genai_sdk, error):
+    genai_sdk.outcomes[:] = [error, "later"]
     provider = _gemini()
     assert provider.complete("s", []) == "later"
     assert genai_sdk.slept == [1]
 
 
 def test_gemini_does_not_retry_other_errors(genai_sdk):
-    genai_sdk.outcomes[:] = [ValueError("blocked by safety")]
+    genai_sdk.outcomes[:] = [ApiError(400, "INVALID_ARGUMENT")]
     provider = _gemini()
-    with pytest.raises(ValueError, match="safety"):
+    with pytest.raises(ApiError, match="INVALID_ARGUMENT"):
         provider.complete("s", [])
-    assert len(provider.model.calls) == 1
+    assert len(provider.client.models.calls) == 1
+
+
+def test_gemini_without_text_raises_instead_of_returning_none(genai_sdk):
+    genai_sdk.outcomes[:] = [None]
+    provider = _gemini()
+    with pytest.raises(ValueError, match="returned no text"):
+        provider.complete("s", [])
 
 
 def test_gemini_stream_yields_text_and_skips_empty_chunks(genai_sdk):
-    genai_sdk.outcomes[:] = [["Hel", "", "lo"]]
+    genai_sdk.outcomes[:] = [["Hel", "", None, "lo"]]
     provider = _gemini()
     assert list(provider.stream("s", [])) == ["Hel", "lo"]
-    assert provider.model.calls[0]["stream"] is True
+    assert provider.client.models.calls[0]["stream"] is True

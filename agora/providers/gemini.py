@@ -1,4 +1,4 @@
-"""Google Gemini provider."""
+"""Google Gemini provider (Google Gen AI SDK, package ``google-genai``)."""
 
 from __future__ import annotations
 import os
@@ -17,44 +17,52 @@ DEFAULT_MODEL = "flash"
 
 
 class GeminiProvider(LLMProvider):
-    """Gemini via Google Generative AI API."""
+    """Gemini via the Google Gen AI SDK (the older google-generativeai SDK is deprecated)."""
 
     def __init__(self, model: Optional[str] = None):
-        import google.generativeai as genai
+        from google import genai
         key = os.environ.get("GOOGLE_API_KEY")
         if not key:
             raise EnvironmentError("GOOGLE_API_KEY not set. Get one at https://aistudio.google.com/apikey")
-        genai.configure(api_key=key)
+        self.client = genai.Client(api_key=key)
         model_name = model or DEFAULT_MODEL
         self.model_id = MODELS.get(model_name.lower(), model_name)
-        self.model = genai.GenerativeModel(self.model_id)
         self.display_name = model_name
 
     def complete(self, system: str, messages: list[dict], max_tokens: int = 1024) -> str:
         prompt = self._build_prompt(system, messages)
         for attempt in range(3):
             try:
-                response = self.model.generate_content(
-                    prompt,
-                    generation_config={"max_output_tokens": max_tokens},
+                response = self.client.models.generate_content(
+                    model=self.model_id,
+                    contents=prompt,
+                    config={"max_output_tokens": max_tokens},
                 )
-                return response.text
             except Exception as e:
-                if attempt < 2 and ("rate" in str(e).lower() or "quota" in str(e).lower()):
+                if attempt < 2 and self._is_rate_limit(e):
                     time.sleep(2 ** attempt)
-                else:
-                    raise
+                    continue
+                raise
+            if response.text is None:
+                # The new SDK returns None where the old one raised, e.g. for a blocked answer.
+                raise ValueError(f"Gemini ({self.model_id}) returned no text (blocked or empty answer)")
+            return response.text
 
     def stream(self, system: str, messages: list[dict], max_tokens: int = 1024) -> Iterator[str]:
         prompt = self._build_prompt(system, messages)
-        response = self.model.generate_content(
-            prompt,
-            generation_config={"max_output_tokens": max_tokens},
-            stream=True,
+        response = self.client.models.generate_content_stream(
+            model=self.model_id,
+            contents=prompt,
+            config={"max_output_tokens": max_tokens},
         )
         for chunk in response:
             if chunk.text:
                 yield chunk.text
+
+    @staticmethod
+    def _is_rate_limit(error: Exception) -> bool:
+        text = str(error).lower()
+        return getattr(error, "code", None) == 429 or "rate" in text or "quota" in text
 
     @staticmethod
     def _build_prompt(system: str, messages: list[dict]) -> str:
