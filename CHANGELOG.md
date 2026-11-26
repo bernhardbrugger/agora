@@ -94,6 +94,10 @@ reconstructed from the git history.
   account of what is tested.
 
 ### Fixed
+- The default Gemini alias `flash` pointed to `gemini-2.0-flash`, which Google shut down on 2026-06-01, so
+  `--provider gemini` failed without `--model`. `flash` now means `gemini-3.8-flash` (stable) and `pro` means
+  `gemini-3.1-pro-preview` (Google lists no stable Pro model). The `thinking` alias is gone: its ID
+  `gemini-2.0-flash-thinking` is not on Google's model or deprecation pages. Checked on those pages, not live.
 - Without the `mcp` package, `agora mcp`, `--mcp-server` and their help said `pip install "agora-debate[mcp]"`, a
   name that is not on PyPI (the command failed, and anyone could register the name). They now say
   `pip install "mcp>=1.2"`, which works however agora was installed.

@@ -7,10 +7,11 @@ from typing import Optional, Iterator
 
 from agora.providers.base import LLMProvider
 
+# Checked 2026-11-26 against Google's model and deprecation pages: gemini-2.0-flash was shut down on
+# 2026-06-01; gemini-3.8-flash is the newest Flash marked stable; no Pro model is stable, so `pro` is a preview.
 MODELS = {
-    "flash": "gemini-2.0-flash",
-    "pro": "gemini-2.0-pro",
-    "thinking": "gemini-2.0-flash-thinking",
+    "flash": "gemini-3.8-flash",
+    "pro": "gemini-3.1-pro-preview",
 }
 
 DEFAULT_MODEL = "flash"

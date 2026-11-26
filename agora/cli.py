@@ -25,7 +25,7 @@ PROVIDER_HELP = """LLM provider to use:
 MODEL_HELP = """Model to use (provider-specific):
   Anthropic: haiku, sonnet (default), opus
   OpenAI:    gpt4o (default), gpt4o-mini, o1, o3-mini
-  Gemini:    flash (default), pro, thinking
+  Gemini:    flash (default), pro
   Grok:      grok (default), grok-mini"""
 
 
@@ -338,7 +338,7 @@ def list_providers_cmd() -> None:
     providers = [
         ("anthropic", "ANTHROPIC_API_KEY", "Claude", "haiku, sonnet*, opus"),
         ("openai",    "OPENAI_API_KEY",    "GPT",    "gpt4o*, gpt4o-mini, o1, o3-mini"),
-        ("gemini",    "GOOGLE_API_KEY",    "Gemini", "flash*, pro, thinking"),
+        ("gemini",    "GOOGLE_API_KEY",    "Gemini", "flash*, pro"),
         ("grok",      "XAI_API_KEY",       "Grok",   "grok*, grok-mini"),
     ]
     for name, env_var, display, models in providers:

@@ -185,7 +185,7 @@ def test_gemini_without_a_key_says_which_variable_is_missing(genai_sdk, monkeypa
 
 @pytest.mark.parametrize(
     "model, api_model",
-    [(None, "gemini-2.0-flash"), ("Pro", "gemini-2.0-pro"), ("gemini-2.5-flash", "gemini-2.5-flash")],
+    [(None, "gemini-3.8-flash"), ("Pro", "gemini-3.1-pro-preview"), ("gemini-4-neon", "gemini-4-neon")],
 )
 def test_gemini_passes_the_key_and_resolves_aliases(genai_sdk, model, api_model):
     provider = _gemini(model)
