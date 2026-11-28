@@ -35,7 +35,7 @@
 | Provider | Flag | Models | API Key |
 |----------|------|--------|---------|
 | **Anthropic** (default) | `--provider anthropic` | `haiku`, `sonnet`*, `opus` | `ANTHROPIC_API_KEY` |
-| **OpenAI** | `--provider openai` | `gpt4o`*, `gpt4o-mini`, `o1`, `o3-mini` | `OPENAI_API_KEY` |
+| **OpenAI** | `--provider openai` | `astra`, `sol`*, `luna`, `gpt4o`, `gpt4o-mini` (until 2027-01-14) | `OPENAI_API_KEY` |
 | **Google Gemini** | `--provider gemini` | `flash`*, `pro` (a preview model) | `GOOGLE_API_KEY` |
 | **xAI Grok** | `--provider grok` | `grok`*, `grok-mini` | `XAI_API_KEY` |
 
@@ -533,7 +533,7 @@ agora run --topic "Topic" --preset neutral --no-stream
 
 # Use a specific model
 agora run --topic "Topic" --preset startup_team --model opus
-agora run --topic "Topic" --preset neutral --provider openai --model gpt4o-mini
+agora run --topic "Topic" --preset neutral --provider openai --model luna
 
 # Save reports to a custom directory. Each run writes debate_<topic>_<time>.md and, with the same name,
 # a .json transcript (rounds, phases, scores, moderator, synthesis; schema: docs/transcript.schema.json)
@@ -564,7 +564,7 @@ Agora is a small hobby project. Know what you are getting:
 
 - **Tests cover the logic, not the models.** CI runs `pytest` on Linux and Windows (Python 3.9 and 3.13): phases, consensus scoring, presets, reports and the `run` command end to end through `--dry-run`. No test calls a real provider, so the provider code (API calls, retries, model IDs) is only checked by running debates by hand.
 - **Not on PyPI yet.** Install from the repository: `pip install git+https://github.com/bernhardbrugger/agora` or the clone shown above. The presets ship inside the package (`agora/personas/`); to add your own, use an editable install (`pip install -e .`) and drop the YAML there.
-- **Model aliases are pinned model IDs** (for example `sonnet` → `claude-sonnet-5-5`, `flash` → `gemini-3.8-flash`; the Anthropic and Gemini ones were last checked on 2026-11-26). Providers retire models; if an alias fails, pass a current full model ID with `--model`. Gemini runs on the Google Gen AI SDK (`google-genai`); the Gemini path is tested against a fake SDK only, not against the live API.
+- **Model aliases are pinned model IDs** (for example `sonnet` → `claude-sonnet-5-5`, `flash` → `gemini-3.8-flash`, `sol` → `gpt-6.2-sol`; the Anthropic and Gemini ones were last checked on 2026-11-26, the OpenAI ones on 2026-11-28). Providers retire models; if an alias fails, pass a current full model ID with `--model`. Gemini runs on the Google Gen AI SDK (`google-genai`); the Gemini path is tested against a fake SDK only, not against the live API.
 - **The scorecard reads words, not meaning.** A stance comes from simple word matching on the `POSITION:` line, and a repeat is word overlap, so a paraphrased argument is not caught. "Unsupported" is a word pattern too: it misses claims phrased without a figure or a study word, and cited sources are listed, never checked. The steelman and crux checks only see whether a `STEELMAN:` or `CRUX:` line is there, not whether it is fair or the real crux.
 - **The consensus meter is a rough heuristic.** It combines keyword overlap with simple word matching on each agent's `POSITION:` line. It does not understand meaning and can misread negations.
 - **Every agent is the same underlying model** playing a role. Debates can converge because of that, not because an argument won.

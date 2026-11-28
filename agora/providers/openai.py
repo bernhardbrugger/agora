@@ -7,15 +7,18 @@ from typing import Optional, Iterator
 
 from agora.providers.base import LLMProvider
 
+# Checked 2026-11-28 against OpenAI's model and deprecation pages: o1 and o3-mini were shut down on
+# 2026-10-23; the GPT-4o snapshots behind gpt4o and gpt4o-mini shut down on 2027-01-14.
 MODELS = {
+    "astra": "gpt-6.2-astra",
+    "sol": "gpt-6.2-sol",
+    "luna": "gpt-6-luna",
     "gpt4": "gpt-4o",
     "gpt4o": "gpt-4o",
     "gpt4o-mini": "gpt-4o-mini",
-    "o1": "o1",
-    "o3-mini": "o3-mini",
 }
 
-DEFAULT_MODEL = "gpt4o"
+DEFAULT_MODEL = "sol"
 
 
 class OpenAIProvider(LLMProvider):

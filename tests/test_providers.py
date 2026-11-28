@@ -65,12 +65,12 @@ def test_openai_without_a_key_says_which_variable_is_missing(openai_sdk, monkeyp
 
 @pytest.mark.parametrize(
     "model, api_model",
-    [(None, "gpt-4o"), ("gpt4o-mini", "gpt-4o-mini"), ("GPT4", "gpt-4o"), ("gpt-5-custom", "gpt-5-custom")],
+    [(None, "gpt-6.2-sol"), ("astra", "gpt-6.2-astra"), ("LUNA", "gpt-6-luna"), ("gpt4o-mini", "gpt-4o-mini"), ("o1", "o1")],
 )
 def test_openai_resolves_aliases_and_passes_unknown_names_through(openai_sdk, model, api_model):
     provider = _openai(model)
     assert provider.model == api_model
-    assert provider.display_name == (model or "gpt4o")
+    assert provider.display_name == (model or "sol")
     assert openai_sdk.made[0].kwargs == {"api_key": "test-key"}
 
 
@@ -80,7 +80,7 @@ def test_openai_complete_puts_the_system_prompt_first(openai_sdk):
     assert answer == "ok"
     (call,) = provider.client.chat.completions.calls
     assert call == {
-        "model": "gpt-4o",
+        "model": "gpt-6.2-sol",
         "max_completion_tokens": 77,
         "messages": [{"role": "system", "content": "be brief"}, {"role": "user", "content": "hi"}],
     }

@@ -94,6 +94,13 @@ reconstructed from the git history.
   account of what is tested.
 
 ### Fixed
+- The default OpenAI alias `gpt4o` points to GPT-4o, which OpenAI shuts down on 2027-01-14, and `o1` and `o3-mini`
+  were shut down on 2026-10-23. New aliases `astra`, `sol` (now the default) and `luna` mean `gpt-6.2-astra`,
+  `gpt-6.2-sol` and `gpt-6-luna`; `o1` and `o3-mini` are gone, `gpt4o` and `gpt4o-mini` stay until their shutdown.
+  Read from OpenAI's model and deprecation pages on 2026-11-28, not called live.
+- The OpenAI provider sends the length limit as `max_completion_tokens`. `max_tokens` is deprecated in the OpenAI
+  SDK and not accepted by reasoning models, so `--model` with such a model failed. The `openai` extra now needs
+  `openai>=1.45.0`, the first SDK with that parameter on chat completions. Grok keeps `max_tokens`. Not run live.
 - The default provider failed without `--model`: `sonnet` pointed to `claude-sonnet-4-20250514`, which Anthropic
   retired on 2026-06-15 (requests answer 404); `haiku` and `opus` pointed to retired or unknown IDs as well. The
   aliases now mean `claude-haiku-5-5`, `claude-sonnet-5-5` and `claude-opus-5-5`, read from Anthropic's model and
