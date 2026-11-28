@@ -37,7 +37,7 @@ class OpenAIProvider(LLMProvider):
             try:
                 response = self.client.chat.completions.create(
                     model=self.model,
-                    max_tokens=max_tokens,
+                    max_completion_tokens=max_tokens,
                     messages=oai_messages,
                 )
                 return response.choices[0].message.content
@@ -51,7 +51,7 @@ class OpenAIProvider(LLMProvider):
         oai_messages = [{"role": "system", "content": system}] + messages
         response = self.client.chat.completions.create(
             model=self.model,
-            max_tokens=max_tokens,
+            max_completion_tokens=max_tokens,
             messages=oai_messages,
             stream=True,
         )

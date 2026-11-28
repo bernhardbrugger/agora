@@ -81,7 +81,7 @@ def test_openai_complete_puts_the_system_prompt_first(openai_sdk):
     (call,) = provider.client.chat.completions.calls
     assert call == {
         "model": "gpt-4o",
-        "max_tokens": 77,
+        "max_completion_tokens": 77,
         "messages": [{"role": "system", "content": "be brief"}, {"role": "user", "content": "hi"}],
     }
 
@@ -117,6 +117,7 @@ def test_openai_stream_yields_text_and_skips_empty_chunks(openai_sdk):
     assert list(provider.stream("s", [{"role": "user", "content": "hi"}])) == ["Hel", "lo"]
     (call,) = provider.client.chat.completions.calls
     assert call["stream"] is True
+    assert call["max_completion_tokens"] == 1024 and "max_tokens" not in call
     assert call["messages"][0] == {"role": "system", "content": "s"}
 
 
