@@ -94,6 +94,10 @@ reconstructed from the git history.
   account of what is tested.
 
 ### Fixed
+- The Grok aliases `grok` (default) and `grok-mini` pointed to `grok-3` and `grok-3-mini`, which no longer appear
+  in xAI's model list. They now mean `grok-4.7`, the flagship on that list, and `grok-4.3`, its lower-priced text
+  model (xAI names no small model). Read from docs.x.ai/docs/models on 2026-11-28; xAI's deprecation page answered
+  404, so a shutdown date for `grok-3` is not known. Not called live.
 - The default OpenAI alias `gpt4o` points to GPT-4o, which OpenAI shuts down on 2027-01-14, and `o1` and `o3-mini`
   were shut down on 2026-10-23. New aliases `astra`, `sol` (now the default) and `luna` mean `gpt-6.2-astra`,
   `gpt-6.2-sol` and `gpt-6-luna`; `o1` and `o3-mini` are gone, `gpt4o` and `gpt4o-mini` stay until their shutdown.

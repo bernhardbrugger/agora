@@ -7,9 +7,11 @@ from typing import Optional, Iterator
 
 from agora.providers.base import LLMProvider
 
+# Model IDs from xAI's model list (docs.x.ai/docs/models, read 2026-11-28): grok-4.7 is the flagship there;
+# xAI names no small model, so grok-mini points to grok-4.3, the lower-priced text model on that list.
 MODELS = {
-    "grok": "grok-3",
-    "grok-mini": "grok-3-mini",
+    "grok": "grok-4.7",
+    "grok-mini": "grok-4.3",
 }
 
 DEFAULT_MODEL = "grok"

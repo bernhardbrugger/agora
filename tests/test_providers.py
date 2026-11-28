@@ -1,4 +1,4 @@
-"""Anthropic, OpenAI and Gemini providers against fake SDK modules: no network, no key, no cost."""
+"""Anthropic, OpenAI, Grok and Gemini providers against fake SDK modules: no network, no key, no cost."""
 
 from __future__ import annotations
 
@@ -119,6 +119,31 @@ def test_openai_stream_yields_text_and_skips_empty_chunks(openai_sdk):
     assert call["stream"] is True
     assert call["max_completion_tokens"] == 1024 and "max_tokens" not in call
     assert call["messages"][0] == {"role": "system", "content": "s"}
+
+
+# ── Grok (xAI, OpenAI-compatible: same fake SDK) ─────────────────────────────
+
+@pytest.mark.parametrize(
+    "model, api_model",
+    [(None, "grok-4.7"), ("grok-mini", "grok-4.3"), ("GROK", "grok-4.7"), ("grok-4.20-0309-reasoning", "grok-4.20-0309-reasoning")],
+)
+def test_grok_resolves_aliases_against_the_xai_endpoint(openai_sdk, monkeypatch, model, api_model):
+    from agora.providers.grok import GrokProvider
+
+    monkeypatch.setenv("XAI_API_KEY", "xai-test")
+    provider = GrokProvider(model=model)
+    assert openai_sdk.made[0].kwargs == {"api_key": "xai-test", "base_url": "https://api.x.ai/v1"}
+    assert provider.complete("s", [{"role": "user", "content": "hi"}], max_tokens=50) == "ok"
+    (call,) = provider.client.chat.completions.calls
+    assert call["model"] == api_model and call["max_tokens"] == 50
+
+
+def test_grok_without_a_key_says_which_variable_is_missing(openai_sdk, monkeypatch):
+    from agora.providers.grok import GrokProvider
+
+    monkeypatch.delenv("XAI_API_KEY", raising=False)
+    with pytest.raises(EnvironmentError, match="XAI_API_KEY not set"):
+        GrokProvider()
 
 
 # ── fake google.genai SDK (Google Gen AI SDK) ────────────────────────────────

@@ -37,7 +37,7 @@
 | **Anthropic** (default) | `--provider anthropic` | `haiku`, `sonnet`*, `opus` | `ANTHROPIC_API_KEY` |
 | **OpenAI** | `--provider openai` | `astra`, `sol`*, `luna`, `gpt4o`, `gpt4o-mini` (until 2027-01-14) | `OPENAI_API_KEY` |
 | **Google Gemini** | `--provider gemini` | `flash`*, `pro` (a preview model) | `GOOGLE_API_KEY` |
-| **xAI Grok** | `--provider grok` | `grok`*, `grok-mini` | `XAI_API_KEY` |
+| **xAI Grok** | `--provider grok` | `grok`* (Grok 4.7), `grok-mini` (the lower-priced Grok 4.3) | `XAI_API_KEY` |
 
 *\* = default model for that provider*
 
